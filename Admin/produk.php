@@ -121,8 +121,8 @@ button {
             <th>Modal</th>
             <th>Harga</th>
             <th>Keuntungan</th>
-            <th>Expired</th>
-            <th>Kategori</th> <!-- ganti jadi nama kategori -->
+            <th>Barcode</th> <!-- sudah diganti -->
+            <th>Kategori</th>
             <th>Deskripsi</th>
             <th>Action</th>
         </tr>
@@ -145,17 +145,21 @@ button {
                 <td><?= number_format($row['modal'], 0, ',', '.') ?></td>
                 <td><?= number_format($row['harga_jual'], 0, ',', '.') ?></td>
                 <td><?= number_format($row['keuntungan'], 0, ',', '.') ?></td>
-                <td><?= $row['barcode'] ?></td>
+                <td>
+    <img src="../service/barcode.php?text=<?= $row['barcode'] ?>&size=60&orientation=horizontal&code=Code128" 
+     alt="barcode" style="width: 150px; height: 50px;">
+
                 <td><?= $row['nama_kategori'] ?></td>
                 <td><?= $row['deskripsi'] ?></td>
                 <td>
-                    <a href="edit-produk.php?id=<?= $row['id_produk'] ?>">✏️</a>
-                    <a href="delete-produk.php?id=<?= $row['id_produk'] ?>" onclick="return confirm('Yakin mau hapus?')">🗑️</a>
+                    <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>">✏️</a>
+                    <a href="../service/delete-produk.php?id=<?= $row['id_produk'] ?>" onclick="return confirm('Yakin mau hapus?')">🗑️</a>
                 </td>
             </tr>
         <?php } ?>
     </tbody>
 </table>
+
     </div>
 </body>
 </html>
