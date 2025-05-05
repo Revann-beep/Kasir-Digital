@@ -164,7 +164,8 @@ $conn->close();
                 <td><?= $row['id'] ?></td>
                 <td><?= $row['email'] ?></td>
                 <td><?= $row['username'] ?></td>
-                <td><img src="<?= $row['gambar'] ?>" alt="User" width="50"></td>
+                <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50"></td>
+
                 <td class="action-icons">
                     <span class="icon" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
                     <form action="../service/delete-acc.php" method="POST" style="display:inline;">

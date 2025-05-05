@@ -1,3 +1,18 @@
+<?php
+include '../service/conection.php';
+
+// Ambil data transaksi per minggu
+$query = mysqli_query($conn, "
+    SELECT 
+        WEEK(tgl_pembelian, 1) AS minggu,
+        COUNT(*) AS total_transaksi,
+        SUM(total_harga) AS total_penjualan
+    FROM transaksi
+    GROUP BY minggu
+    ORDER BY minggu ASC
+");
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -28,10 +43,10 @@
         }
         .sidebar ul li {
             padding: 10px;
-            cursor: pointer;
         }
-        .sidebar ul li.logout {
-            margin-top: 50px;
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
         }
         .main-content {
             flex-grow: 1;
@@ -69,7 +84,7 @@
         }
         th, td {
             padding: 10px;
-            text-align: left;
+            text-align: center;
         }
         th {
             background-color: #ffcc00;
@@ -77,7 +92,7 @@
     </style>
 </head>
 <body>
-<div class="sidebar">
+    <div class="sidebar">
         <h2>Toko Elektronik</h2>
         <ul>
             <li><a href="dashboard.php">⚙️ Dashboard</a></li>
@@ -91,24 +106,30 @@
             <input type="text" placeholder="Search">
         </div>
         <div class="report-container">
-            <h3>Halaman Laporan</h3>
-            <button class="download-btn">+ Unduh Laporan</button>
+            <h3>Halaman Laporan Mingguan</h3>
+            <button class="download-btn" onclick="window.print()">🖨️ Unduh Laporan</button>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Week</th>
+                        <th>#</th>
+                        <th>Minggu ke-</th>
                         <th>Total Penjualan</th>
                         <th>Total Transaksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Minggu ke-1</td>
-                        <td>500</td>
-                        <td>500</td>
-                    </tr>
+                    <?php 
+                    $no = 1;
+                    while($row = mysqli_fetch_assoc($query)) {
+                        echo "<tr>
+                                <td>{$no}</td>
+                                <td>Minggu ke-{$row['minggu']}</td>
+                                <td>Rp" . number_format($row['total_penjualan'], 0, ',', '.') . "</td>
+                                <td>{$row['total_transaksi']}</td>
+                              </tr>";
+                        $no++;
+                    } 
+                    ?>
                 </tbody>
             </table>
         </div>

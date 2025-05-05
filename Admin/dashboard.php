@@ -124,21 +124,22 @@ if (!isset($_SESSION['username'])) {
         </ul>
     </div>
     <div class="main-content">
-        <header>
-        <span class="date" id="currentDate"></span>
+    <header>
+    <span class="date" id="currentDate"></span>
     <div class="account-info">
-        <img src="../assets/admin.jpg" alt="user" class="user-icon">
-        <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-    </div>  
-           
-        </header>
+        <a href="profile.php" style="display: flex; align-items: center; text-decoration: none; color: black;">
+            <img src="../assets/admin.jpg" alt="user" class="user-icon">
+            <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+        </a>
+    </div>
+</header>
        
 
         <div class="grid-container">
             <a href="produk.php"><button>📦 Data Product</button></a>
             <a href="laporan.php"><button>📊 Laporan</button></a>
             <a href="member.php"><button>👥 Halaman Member</button></a>
-            <a href="keranjang.html"><button>🛒 Keranjang</button></a>
+            <a href="../user/keranjang.php"><button>🛒 Keranjang</button></a>
             <a href="admin.php"><button>👨‍💼 Admin</button></a>
             <a href="transaksi.php"><button>💳 Transaksi</button></a>
         </div>

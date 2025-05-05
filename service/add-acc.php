@@ -24,7 +24,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $target_file = $target_dir . $new_file_name;
 
             if (move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_file)) {
-                $gambar = $new_file_name; // Simpan hanya nama file
+                $gambar = $new_file_name; // <-- ini sudah benar
+
             } else {
                 $gambar = "user-icon.png"; // Default jika upload gagal
             }
@@ -51,7 +52,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->close();
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="id">

@@ -1,5 +1,5 @@
 <?php
-include 'conection.php'; // Koneksi ke database
+include 'conection.php';
 
 if (!isset($_GET['id'])) {
     header("Location: admin.php");
@@ -20,17 +20,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $username = $_POST['username'];
 
-    // Cek apakah user mengupload gambar baru
+    // Cek apakah upload gambar baru
     if ($_FILES['gambar']['name']) {
-        $target_dir = "assets/"; // Folder penyimpanan gambar
-        $target_file = $target_dir . basename($_FILES["gambar"]["name"]);
-        move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_file);
-        $gambar = $target_file;
+        $namaFile = time() . '_' . $_FILES['gambar']['name'];
+        $target_dir = "../assets/";
+        move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_dir . $namaFile);
+        $gambar = $namaFile;
     } else {
-        $gambar = $admin['gambar']; // Pakai gambar lama
+        $gambar = $admin['gambar']; // Tetap pakai gambar lama
     }
 
-    // Update data admin di database
     $sql = "UPDATE admin SET email='$email', username='$username', gambar='$gambar' WHERE id=$id";
 
     if ($conn->query($sql) === TRUE) {
@@ -48,91 +47,113 @@ $conn->close();
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Admin</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Edit Admin</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
+            margin: 0;
             font-family: Arial, sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background: #b8860b;
+            padding: 20px;
+            color: white;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 10px;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background: #f4f4f4;
         }
         .form-container {
-            background: #9ec3af;
+            background: #fff;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
+            width: 400px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         h2 {
             text-align: center;
-            font-weight: bold;
         }
         label {
             font-weight: bold;
             display: block;
             margin-top: 10px;
-            text-align: left;
         }
         input {
-            width: 90%;
+            width: 100%;
             padding: 8px;
             margin-top: 5px;
-            border: 1px solid #ccc;
             border-radius: 5px;
-            background: blue;
-            color: white;
+            border: 1px solid #ccc;
         }
         input[type="file"] {
+            padding: 0;
             background: none;
-            color: black;
         }
         .btn {
-            background: red;
+            background: #b8860b;
             color: white;
             padding: 10px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
             margin-top: 15px;
+            border: none;
+            width: 100%;
             font-size: 16px;
             font-weight: bold;
             border-radius: 5px;
+            cursor: pointer;
         }
         .btn:hover {
-            background: darkred;
+            background: #a67300;
         }
         img {
-            width: 100px;
-            margin-top: 10px;
-            border-radius: 5px;
             display: block;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 10px auto;
+            width: 100px;
         }
     </style>
 </head>
 <body>
 
-<div class="form-container">
-    <h2>Update Admin</h2>
-    <form action="" method="POST" enctype="multipart/form-data">
-        <label>Email:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
-
-        <label>Username:</label>
-        <input type="text" name="username" value="<?= htmlspecialchars($admin['username']) ?>" required>
-
-        <label>Image:</label>
-        <input type="file" name="gambar">
-        
-        <button type="submit" class="btn">Update Admin</button>
-    </form>
+<div class="sidebar">
+    <h2>TimelessWatch.co</h2>
+    <ul>
+        <li><a href="dashboard.php">⚙️ Dashboard</a></li>
+        <li><a href="kategori.php">📂 Kategori</a></li>
+        <li><a href="produk.php">📦 Produk</a></li>
+        <li><a href="../service/index.php">↩️ Log out</a></li>
+    </ul>
 </div>
+
+<main class="content">
+    <div class="form-container">
+        <h2>Edit Admin</h2>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <label>Email:</label>
+            <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
+
+            <label>Username:</label>
+            <input type="text" name="username" value="<?= htmlspecialchars($admin['username']) ?>" required>
+
+            <label>Gambar Baru (opsional):</label>
+            <input type="file" name="gambar">
+
+            <label>Gambar Sekarang:</label>
+            <img src="../assets/<?= $admin['gambar'] ?>" alt="User">
+
+            <button type="submit" class="btn">Simpan Perubahan</button>
+        </form>
+    </div>
+</main>
 
 </body>
 </html>
