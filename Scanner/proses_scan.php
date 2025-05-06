@@ -1,17 +1,38 @@
 <?php
-$koneksi = mysqli_connect("localhost", "root", "", "kasir");
+session_start();
+$koneksi = new mysqli("localhost", "root", "", "kasir");
 
 $kode = $_POST['barcode'];
 
-$query = mysqli_query($koneksi, "SELECT * FROM produk WHERE barcode = '$kode'");
-$data = mysqli_fetch_array($query);
+// Ambil data produk dari database
+$query = $koneksi->prepare("SELECT * FROM produk WHERE barcode = ?");
+$query->bind_param("s", $kode);
+$query->execute();
+$result = $query->get_result();
+$produk = $result->fetch_assoc();
 
-if ($data) {
-    echo "<h2>Produk Ditemukan</h2>";
-    echo "<p>Nama Produk: <strong>" . $data['nama_produk'] . "</strong></p>";
-    echo "<p>Harga Jual: Rp " . number_format($data['harga_jual']) . "</p>";
-    echo "<p>Stok: " . $data['stok'] . "</p>";
+if ($produk) {
+    $id_produk = $produk['id_produk'];
+    $nama = $produk['nama_produk'];
+    $harga = $produk['harga_jual'];
+
+    // Cek apakah produk sudah ada di keranjang
+    if (isset($_SESSION['keranjang'][$id_produk])) {
+        $_SESSION['keranjang'][$id_produk]['qty'] += 1;
+    } else {
+        $_SESSION['keranjang'][$id_produk] = [
+            'id_produk' => $id_produk,
+            'nama' => $nama,
+            'harga' => $harga,
+            'qty' => 1
+        ];
+    }
+
+    // Arahkan kembali ke halaman keranjang
+    header("Location: ../user/keranjang.php");
+    exit();
 } else {
     echo "<h2>Produk Tidak Ditemukan</h2>";
+    echo "<p><a href='scan.php'>🔄 Kembali ke Scan</a></p>";
 }
 ?>

@@ -105,6 +105,8 @@ button {
         </ul>
     </div>
     <div class="content">
+    <a href="../Scanner/Scan.php" class="add-btn" style="background: green; margin-bottom: 15px; display: inline-block;">🛒 Transaksi Sekarang</a>
+
         <div class="top-bar">
             <input type="text" placeholder="Search">
             <a href="../service/add-produk.php" class="add-btn">+ Add Product</a>
