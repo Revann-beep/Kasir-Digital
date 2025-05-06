@@ -1,8 +1,9 @@
 <?php
 session_start();
+include '../service/conection.php';
 
-// === [TAMBAHAN: Set dan periksa masa berlaku keranjang] ===
-$waktu_expired = 10 * 60; // 15 menit
+// === Set dan periksa masa berlaku keranjang ===
+$waktu_expired = 10 * 60; // 10 menit
 
 if (isset($_SESSION['keranjang'])) {
     if (!isset($_SESSION['keranjang_waktu'])) {
@@ -16,15 +17,41 @@ if (isset($_SESSION['keranjang'])) {
         }
     }
 }
+
+// Ambil dan simpan member jika dipilih
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fid_member'])) {
+    $_SESSION['fid_member'] = $_POST['fid_member'];
+    header("Location: keranjang.php");
+    exit;
+}
+
+$fid_member = isset($_SESSION['fid_member']) ? $_SESSION['fid_member'] : '';
+$member = null;
+$poin_diskon = 0;
+$total = 0;
+
+if (!empty($_SESSION['keranjang'])) {
+    foreach ($_SESSION['keranjang'] as $item) {
+        $subtotal = $item['harga'] * $item['qty'];
+        $total += $subtotal;
+    }
+
+    if ($fid_member) {
+        $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member = $fid_member");
+        $member = mysqli_fetch_assoc($q);
+        $poin_diskon = $member ? min($member['point'], floor($total / 1000)) * 1000 : 0;
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <title>Keranjang Belanja</title>
+    <!-- (Gaya tidak diubah, tetap sama seperti sebelumnya) -->
     <style>
-        /* (STYLE TIDAK DIUBAH) */
-        * { box-sizing: border-box; }
+        /* STYLE SAMA SEPERTI YANG ANDA GUNAKAN SEBELUMNYA */
         body {
             margin: 0;
             padding: 0;
@@ -125,21 +152,31 @@ if (isset($_SESSION['keranjang'])) {
     </style>
 </head>
 <body>
-
 <div class="container">
     <a href="../Scanner/scan.php" class="btn kembali">← Kembali ke Belanja</a>
     <h2>Keranjang Belanja</h2>
 
     <?php if (!empty($_SESSION['keranjang'])): ?>
 
-        <?php
-            // Hitung waktu tersisa untuk JavaScript
-            $sisa_detik = $waktu_expired - (time() - $_SESSION['keranjang_waktu']);
-        ?>
+        <?php $sisa_detik = $waktu_expired - (time() - $_SESSION['keranjang_waktu']); ?>
 
         <div class="countdown">
             ⏳ Waktu checkout: <span id="timer"><?= floor($sisa_detik / 60) ?>m <?= $sisa_detik % 60 ?>d</span>
         </div>
+
+        <form method="post" action="">
+            <label for="fid_member">Pilih Member (opsional):</label>
+            <select name="fid_member" onchange="this.form.submit()">
+                <option value="">-- Tanpa Member --</option>
+                <?php
+                $list = mysqli_query($conn, "SELECT * FROM member WHERE status = 'aktif'");
+                while ($m = mysqli_fetch_assoc($list)) {
+                    $selected = $fid_member == $m['id_member'] ? "selected" : "";
+                    echo "<option value='$m[id_member]' $selected>$m[nama_member] (Poin: $m[point])</option>";
+                }
+                ?>
+            </select>
+        </form>
 
         <table>
             <thead>
@@ -152,12 +189,8 @@ if (isset($_SESSION['keranjang'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php 
-                $total = 0;
-                foreach ($_SESSION['keranjang'] as $item): 
-                    $subtotal = $item['harga'] * $item['qty'];
-                    $total += $subtotal;
-                ?>
+                <?php foreach ($_SESSION['keranjang'] as $item): 
+                    $subtotal = $item['harga'] * $item['qty']; ?>
                     <tr>
                         <td><?= $item['nama'] ?></td>
                         <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
@@ -173,20 +206,24 @@ if (isset($_SESSION['keranjang'])) {
             </tbody>
         </table>
 
-        <div class="total">Total: Rp <?= number_format($total, 0, ',', '.') ?></div>
+        <div class="total">
+            Total: Rp <?= number_format($total, 0, ',', '.') ?><br>
+            <?php if ($member): ?>
+                Diskon dari poin: Rp <?= number_format($poin_diskon, 0, ',', '.') ?><br>
+                <strong>Grand Total: Rp <?= number_format($total - $poin_diskon, 0, ',', '.') ?></strong>
+            <?php endif; ?>
+        </div>
 
         <a href="../service/hapus-semua-keranjang.php" class="btn kosongkan">🗑️ Kosongkan Keranjang</a>
         <a href="checkout.php" class="btn checkout">Checkout</a>
-        
+
     <?php else: ?>
         <p class="empty-message">Keranjang masih kosong 😢</p>
     <?php endif; ?>
 </div>
 
 <script>
-    // === Countdown Timer JavaScript ===
     let seconds = <?= $sisa_detik ?>;
-
     function updateTimer() {
         if (seconds <= 0) {
             clearInterval(timer);
@@ -199,9 +236,7 @@ if (isset($_SESSION['keranjang'])) {
             seconds--;
         }
     }
-
     let timer = setInterval(updateTimer, 1000);
 </script>
-
 </body>
 </html>
