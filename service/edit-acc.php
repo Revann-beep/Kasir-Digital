@@ -49,111 +49,118 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Edit Admin</title>
     <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            background: linear-gradient(135deg, #e0f7fa, #ffffff);
             display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
-        .sidebar {
-            width: 200px;
-            background: #b8860b;
-            padding: 20px;
-            color: white;
-        }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar ul li {
-            padding: 10px;
-        }
-        .content {
-            flex-grow: 1;
-            padding: 20px;
-            background: #f4f4f4;
-        }
+
         .form-container {
             background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            width: 400px;
-            margin: auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         h2 {
             text-align: center;
+            color: #333;
+            margin-bottom: 20px;
         }
+
         label {
-            font-weight: bold;
             display: block;
-            margin-top: 10px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        input[type="file"] {
-            padding: 0;
-            background: none;
-        }
-        .btn {
-            background: #b8860b;
-            color: white;
-            padding: 10px;
             margin-top: 15px;
-            border: none;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="email"],
+        input[type="text"],
+        input[type="file"] {
             width: 100%;
+            padding: 10px 12px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="file"] {
+            padding: 5px;
+        }
+
+        input:focus {
+            border-color: #26a69a;
+            outline: none;
+        }
+
+        .btn {
+            margin-top: 25px;
+            width: 100%;
+            background-color: #26a69a;
+            color: white;
+            border: none;
+            padding: 12px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
+
         .btn:hover {
-            background: #a67300;
+            background-color: #1e8e81;
         }
-        img {
+
+        .preview-img {
             display: block;
-            margin: 10px auto;
+            margin: 20px auto 10px;
             width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2>TimelessWatch.co</h2>
-    <ul>
-        <li><a href="dashboard.php">⚙️ Dashboard</a></li>
-        <li><a href="kategori.php">📂 Kategori</a></li>
-        <li><a href="produk.php">📦 Produk</a></li>
-        <li><a href="../service/index.php">↩️ Log out</a></li>
-    </ul>
+<div class="form-container">
+    <h2>Edit Admin</h2>
+    <form action="" method="POST" enctype="multipart/form-data">
+        <label>Email:</label>
+        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
+
+        <label>Username:</label>
+        <input type="text" name="username" value="<?= htmlspecialchars($admin['username']) ?>" required>
+
+        <label>Gambar Baru (opsional):</label>
+        <input type="file" name="gambar" accept="image/*">
+
+        <label>Gambar Saat Ini:</label>
+        <img src="../assets/<?= htmlspecialchars($admin['gambar']) ?>" alt="Foto Admin" class="preview-img">
+
+        <button type="submit" class="btn">💾 Simpan Perubahan</button>
+    </form>
 </div>
-
-<main class="content">
-    <div class="form-container">
-        <h2>Edit Admin</h2>
-        <form action="" method="POST" enctype="multipart/form-data">
-            <label>Email:</label>
-            <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
-
-            <label>Username:</label>
-            <input type="text" name="username" value="<?= htmlspecialchars($admin['username']) ?>" required>
-
-            <label>Gambar Baru (opsional):</label>
-            <input type="file" name="gambar">
-
-            <label>Gambar Sekarang:</label>
-            <img src="../assets/<?= $admin['gambar'] ?>" alt="User">
-
-            <button type="submit" class="btn">Simpan Perubahan</button>
-        </form>
-    </div>
-</main>
 
 </body>
 </html>

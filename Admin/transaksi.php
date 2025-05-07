@@ -56,7 +56,7 @@ if (isset($_POST['simpan_transaksi'])) {
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; }
         th { background: yellow; }
-        form input, form button { padding: 8px; width: 100%; margin-bottom: 10px; }
+        form input, form button, form select { padding: 8px; width: 100%; margin-bottom: 10px; }
         form button { background: green; color: white; border: none; cursor: pointer; }
     </style>
 </head>
@@ -108,28 +108,34 @@ if (isset($_POST['simpan_transaksi'])) {
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Nama</th>
-                <th>Tgl</th>
+                <th>Nama Pembeli</th>
+                <th>Tanggal</th>
                 <th>Admin</th>
                 <th>Produk</th>
                 <th>Detail</th>
                 <th>Member</th>
-                <th>Total</th>
+                <th>Total Harga</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            $q = mysqli_query($conn, "SELECT * FROM transaksi ORDER BY id_transaksi DESC");
+            $q = mysqli_query($conn, "
+                SELECT t.*, m.nama_member, p.nama_produk 
+                FROM transaksi t
+                LEFT JOIN member m ON t.fid_member = m.id_member
+                LEFT JOIN produk p ON t.fid_produk = p.id_produk
+                ORDER BY t.id_transaksi DESC
+            ");
             while ($row = mysqli_fetch_assoc($q)) {
                 echo "<tr>
                         <td>{$row['id_transaksi']}</td>
-                        <td>{$row['nama_member']}</td>
+                        <td>{$row['nama_pembeli']}</td>
                         <td>{$row['tgl']}</td>
                         <td>{$row['fid_admin']}</td>
-                        <td>{$row['fid_produk']}</td>
+                        <td>" . ($row['nama_produk'] ?? '-') . "</td>
                         <td>{$row['detail']}</td>
-                        <td>{$row['fid_member']}</td>
-                        <td>Rp" . number_format($row['total_harga']) . "</td>
+                        <td>" . ($row['nama_member'] ?? '-') . "</td>
+                        <td>Rp" . number_format($row['total_harga'], 0, ',', '.') . "</td>
                     </tr>";
             }
             ?>

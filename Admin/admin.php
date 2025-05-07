@@ -10,40 +10,15 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (isset($_POST['add'])) {
-        $email = $_POST['email'];
-        $username = $_POST['username'];
-        $gambar = "user-icon.png";
-        
-        $sql = "INSERT INTO admin (email, username, gambar) VALUES ('$email', '$username', '$gambar')";
-        $conn->query($sql);
-        header("Location: add-acc.php");
-        exit();
-    }
-    
-    if (isset($_POST['update'])) {
-        $id = $_POST['id'];
-        $email = $_POST['email'];
-        $username = $_POST['username'];
-        
-        $sql = "UPDATE admin SET email='$email', username='$username' WHERE id=$id";
-        $conn->query($sql);
-        header("Location: edit-acc.php");
-        exit();
-    }
-    
-    if (isset($_POST['delete'])) {
-        $id = $_POST['id'];
-        
-        $sql = "DELETE FROM admin WHERE id=$id";
-        $conn->query($sql);
-        header("Location: admin.php");
-        exit();
-    }
+// Menangani pencarian
+$searchQuery = '';
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
+    $searchQuery = $_POST['search'];
 }
 
-$admins = $conn->query("SELECT * FROM admin");
+$sql = "SELECT * FROM admin WHERE email LIKE '%$searchQuery%' OR username LIKE '%$searchQuery%'";
+$admins = $conn->query($sql);
+
 $conn->close();
 ?>
 
@@ -55,7 +30,7 @@ $conn->close();
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
+         body {
             margin: 0;
             font-family: Arial, sans-serif;
             display: flex;
@@ -132,9 +107,7 @@ $conn->close();
 </head>
 <body>
 <div class="sidebar">
-    <h2>TimelessWatch.co
-
-</h2>
+    <h2>TimelessWatch.co</h2>
     <ul>
         <li><a href="dashboard.php">⚙️ Dashboard</a></li>
         <li><a href="kategori.php">📂 Kategori</a></li>
@@ -144,7 +117,11 @@ $conn->close();
 </div>
 <main class="content">
     <header class="top-bar">
-        <input type="text" placeholder="Search">
+        <!-- Form pencarian -->
+        <form method="POST" action=""   >
+            <input type="text" name="search" class="search-bar" placeholder="Search by email or username" value="<?= htmlspecialchars($searchQuery) ?>">
+            <button type="submit">🔍</button>
+        </form>
     </header>
     <section class="admin-dashboard">
         <div class="admin-header">
@@ -165,14 +142,12 @@ $conn->close();
                 <td><?= $row['email'] ?></td>
                 <td><?= $row['username'] ?></td>
                 <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50"></td>
-
                 <td class="action-icons">
                     <span class="icon" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
                     <form action="../service/delete-acc.php" method="POST" style="display:inline;">
-    <input type="hidden" name="id" value="<?= htmlspecialchars($row['id']) ?>">
-    <button type="submit" name="delete" onclick="return confirm('Hapus admin ini?')">🗑️</button>
-</form>
-
+                        <input type="hidden" name="id" value="<?= htmlspecialchars($row['id']) ?>">
+                        <button type="submit" name="delete" onclick="return confirm('Hapus admin ini?')">🗑️</button>
+                    </form>
                 </td>
             </tr>
             <?php } ?>
@@ -180,4 +155,4 @@ $conn->close();
     </section>
 </main>
 </body>
-</html> 
+</html>

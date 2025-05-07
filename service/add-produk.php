@@ -9,7 +9,6 @@ if (isset($_POST['submit'])) {
     $barcode = htmlspecialchars($_POST['barcode']);
     $kategori = $_POST['kategori'];
     $deskripsi = htmlspecialchars($_POST['deskripsi']);
-
     $keuntungan = $harga - $modal;
 
     // Upload gambar
@@ -19,24 +18,117 @@ if (isset($_POST['submit'])) {
     move_uploaded_file($tmp, $upload_path);
 
     $sql = "INSERT INTO produk 
-    (nama_produk, barcode, stok, modal, harga_jual, keuntungan, fid_kategori, gambar, deskripsi) 
-    VALUES 
-    ('$nama', '$barcode', '$stok', '$modal', '$harga', '$keuntungan', '$kategori', '$gambar', '$deskripsi')";
+        (nama_produk, barcode, stok, modal, harga_jual, keuntungan, fid_kategori, gambar, deskripsi) 
+        VALUES 
+        ('$nama', '$barcode', '$stok', '$modal', '$harga', '$keuntungan', '$kategori', '$gambar', '$deskripsi')";
 
     mysqli_query($conn, $sql);
     header("Location: ../admin/produk.php");
 }
 ?>
 
-<!-- FORM -->
-<form method="post" enctype="multipart/form-data">
-    <input type="text" name="nama" placeholder="Nama Produk" required><br>
-    <input type="text" name="barcode" placeholder="Barcode Produk" required><br>
-    <input type="number" name="stok" placeholder="Jumlah Stok" required><br>
-    <input type="number" name="modal" placeholder="Harga Modal" required><br>
-    <input type="number" name="harga" placeholder="Harga Jual" required><br>
-    <input type="number" name="kategori" placeholder="ID Kategori" required><br>
-    <textarea name="deskripsi" placeholder="Deskripsi Produk" rows="3" required></textarea><br>
-    <input type="file" name="gambar" required><br>
-    <button type="submit" name="submit">Tambah Produk</button>
-</form>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Tambah Produk</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Tambah Produk</h2>
+    <form method="post" enctype="multipart/form-data">
+        <label for="nama">Nama Produk</label>
+        <input type="text" name="nama" id="nama" placeholder="Nama Produk" required>
+
+        <label for="barcode">Barcode Produk</label>
+        <input type="text" name="barcode" id="barcode" placeholder="Barcode" required>
+
+        <label for="stok">Jumlah Stok</label>
+        <input type="number" name="stok" id="stok" placeholder="Stok" required>
+
+        <label for="modal">Harga Modal</label>
+        <input type="number" name="modal" id="modal" placeholder="Modal" required>
+
+        <label for="harga">Harga Jual</label>
+        <input type="number" name="harga" id="harga" placeholder="Harga Jual" required>
+
+        <label for="kategori">ID Kategori</label>
+        <input type="number" name="kategori" id="kategori" placeholder="Kategori" required>
+
+        <label for="deskripsi">Deskripsi</label>
+        <textarea name="deskripsi" id="deskripsi" rows="3" placeholder="Deskripsi Produk" required></textarea>
+
+        <label for="gambar">Gambar Produk</label>
+        <input type="file" name="gambar" id="gambar" required>
+
+        <button type="submit" name="submit">Tambah Produk</button>
+    </form>
+</div>
+
+</body>
+</html>

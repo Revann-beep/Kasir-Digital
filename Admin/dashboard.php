@@ -1,11 +1,47 @@
 <?php
 session_start();
-
-// Cek apakah session 'username' sudah ada
 if (!isset($_SESSION['username'])) {
-    header("Location: ../service/index.php"); // Redirect ke halaman login
+    header("Location: ../service/index.php");
     exit;
 }
+
+include '../service/conection.php'; // pastikan file conn
+
+// Jumlah item terjual per hari (7 hari terakhir)
+$harianQuery = mysqli_query($conn, "
+    SELECT DATE(t.tgl_pembelian) AS tanggal, SUM(d.jumlah) AS total_item
+    FROM transaksi t
+    JOIN detail_transaksi d ON t.id_transaksi = d.fid_transaksi
+    WHERE t.tgl_pembelian >= CURDATE() - INTERVAL 6 DAY
+    GROUP BY DATE(t.tgl_pembelian)
+    ORDER BY DATE(t.tgl_pembelian)
+");
+
+$hariLabels = [];
+$hariData = [];
+while ($row = mysqli_fetch_assoc($harianQuery)) {
+    $hariLabels[] = $row['tanggal'];
+    $hariData[] = (int)$row['total_item'];
+}
+
+
+// Jumlah item terjual per bulan (12 bulan terakhir)
+$bulananQuery = mysqli_query($conn, "
+    SELECT DATE_FORMAT(t.tgl_pembelian, '%b %Y') AS bulan, SUM(d.jumlah) AS total_item
+    FROM transaksi t
+    JOIN detail_transaksi d ON t.id_transaksi = d.fid_transaksi
+    WHERE t.tgl_pembelian >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
+    ORDER BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
+");
+
+$bulanLabels = [];
+$bulanData = [];
+while ($row = mysqli_fetch_assoc($bulananQuery)) {
+    $bulanLabels[] = $row['bulan'];
+    $bulanData[] = (int)$row['total_item'];
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -153,40 +189,44 @@ if (!isset($_SESSION['username'])) {
         </div>
     </div>
     <script>
-        const ctxBulanan = document.getElementById('chartBulanan').getContext('2d');
-        new Chart(ctxBulanan, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                datasets: [{
-                    label: 'Penjualan Bulanan',
-                    data: [10, 20, 30, 40, 35, 25],
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)'
-                }]
-            }
-        });
+    // Grafik Harian
+const ctxHarian = document.getElementById('chartBulanan').getContext('2d');
+new Chart(ctxHarian, {
+    type: 'bar',
+    data: {
+        labels: <?php echo json_encode($hariLabels); ?>,
+        datasets: [{
+            label: 'Jumlah Item Terjual per Hari',
+            data: <?php echo json_encode($hariData); ?>,
+            backgroundColor: 'rgba(75, 192, 192, 0.5)'
+        }]
+    }
+});
 
-        const ctxTahunan = document.getElementById('chartTahunan').getContext('2d');
-        new Chart(ctxTahunan, {
-            type: 'bar',
-            data: {
-                labels: ['2020', '2021', '2022', '2023', '2024'],
-                datasets: [{
-                    label: 'Penjualan Tahunan',
-                    data: [200, 250, 300, 400, 350],
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
-                }]
-            }
-        });
+// Grafik Bulanan
+const ctxBulanan = document.getElementById('chartTahunan').getContext('2d');
+new Chart(ctxBulanan, {
+    type: 'bar',
+    data: {
+        labels: <?php echo json_encode($bulanLabels); ?>,
+        datasets: [{
+            label: 'Jumlah Item Terjual per Bulan',
+            data: <?php echo json_encode($bulanData); ?>,
+            backgroundColor: 'rgba(153, 102, 255, 0.5)'
+        }]
+    }
+});
 
-        function updateDate() {
+
+    function updateDate() {
         const dateElement = document.getElementById('currentDate');
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const today = new Date().toLocaleDateString('id-ID', options);
         dateElement.textContent = today;
     }
 
-    updateDate(); // Panggil fungsi saat halaman dimuat
-    </script>
+    updateDate();
+</script>
+
 </body>
 </html>
