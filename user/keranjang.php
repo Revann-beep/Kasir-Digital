@@ -2,7 +2,7 @@
 session_start();
 include '../service/conection.php';
 
-// === Set dan periksa masa berlaku keranjang ===
+// === Set masa aktif keranjang ===
 $waktu_expired = 10 * 60; // 10 menit
 
 if (isset($_SESSION['keranjang'])) {
@@ -18,18 +18,27 @@ if (isset($_SESSION['keranjang'])) {
     }
 }
 
-// Ambil dan simpan member jika dipilih
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fid_member'])) {
-    $_SESSION['fid_member'] = $_POST['fid_member'];
-    header("Location: keranjang.php");
-    exit;
-}
-
+// Ambil member dari sesi jika ada
 $fid_member = isset($_SESSION['fid_member']) ? $_SESSION['fid_member'] : '';
 $member = null;
 $poin_diskon = 0;
 $total = 0;
 
+// Cari member berdasarkan no_telp
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['no_telp'])) {
+    $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+    $query = mysqli_query($conn, "SELECT * FROM member WHERE no_telp = '$no_telp' AND status = 'aktif'");
+    if (mysqli_num_rows($query) > 0) {
+        $member = mysqli_fetch_assoc($query);
+        $_SESSION['fid_member'] = $member['id_member'];
+        header("Location: keranjang.php");
+        exit;
+    } else {
+        echo "<script>alert('Member dengan nomor telepon tersebut tidak ditemukan.');</script>";
+    }
+}
+
+// Hitung total dan poin
 if (!empty($_SESSION['keranjang'])) {
     foreach ($_SESSION['keranjang'] as $item) {
         $subtotal = $item['harga'] * $item['qty'];
@@ -49,106 +58,34 @@ if (!empty($_SESSION['keranjang'])) {
 <head>
     <meta charset="UTF-8">
     <title>Keranjang Belanja</title>
-    <!-- (Gaya tidak diubah, tetap sama seperti sebelumnya) -->
     <style>
-        /* STYLE SAMA SEPERTI YANG ANDA GUNAKAN SEBELUMNYA */
+        /* (Tetap gaya sama seperti sebelumnya) */
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Segoe UI', sans-serif;
             background-color: #f5f7fa;
-            color: #333;
+            margin: 0;
+            padding: 0;
         }
         .container {
             max-width: 960px;
             margin: 40px auto;
-            padding: 20px;
             background: #fff;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
         }
-        h2 {
-            text-align: center;
-            font-size: 28px;
-            margin-bottom: 30px;
-            color: #222;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        th, td {
-            padding: 16px;
-            text-align: center;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        th {
-            background-color: #2ecc71;
-            color: white;
-        }
-        tr:last-child td {
-            border-bottom: none;
-        }
-        .qty-btn {
-            padding: 6px 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 0 4px;
-            font-size: 16px;
-        }
-        .qty-btn:hover {
-            background-color: #2980b9;
-        }
-        .btn {
-            padding: 10px 16px;
-            border-radius: 6px;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .btn.hapus { background-color: #e74c3c; }
-        .btn.hapus:hover { background-color: #c0392b; }
-        .btn.kosongkan {
-            background-color: #e67e22;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        .btn.kosongkan:hover { background-color: #d35400; }
-        .btn.kembali {
-            background-color: #f1c40f;
-            color: #333;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-        .btn.kembali:hover { background-color: #d4ac0d; }
-        .btn.checkout {
-            background-color: #27ae60;
-            float: right;
-        }
-        .btn.checkout:hover { background-color: #1e8449; }
-        .total {
-            font-size: 22px;
-            font-weight: bold;
-            text-align: right;
-            padding: 10px;
-            color: #2c3e50;
-        }
-        .empty-message {
-            text-align: center;
-            font-size: 20px;
-            color: #777;
-        }
-        .countdown {
-            text-align: right;
-            font-size: 16px;
-            color: #e74c3c;
-            margin-bottom: 10px;
-        }
+        h2 { text-align: center; font-size: 28px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 16px; text-align: center; border-bottom: 1px solid #e0e0e0; }
+        th { background-color: #2ecc71; color: white; }
+        .btn { padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; margin: 5px 0; }
+        .btn.kembali { background-color: #f1c40f; color: #333; }
+        .btn.checkout { background-color: #27ae60; color: white; float: right; }
+        .btn.hapus { background-color: #e74c3c; color: white; }
+        .btn.kosongkan { background-color: #e67e22; color: white; }
+        .qty-btn { padding: 6px 12px; background-color: #3498db; color: white; border-radius: 6px; text-decoration: none; margin: 0 5px; }
+        .total { text-align: right; font-size: 20px; margin-top: 20px; }
+        .countdown { text-align: right; color: #e74c3c; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -156,32 +93,26 @@ if (!empty($_SESSION['keranjang'])) {
     <a href="../Scanner/scan.php" class="btn kembali">← Kembali ke Belanja</a>
     <h2>Keranjang Belanja</h2>
 
+    <!-- Form Member -->
+    <form method="post" action="">
+        <label>No. Telepon Member:</label>
+        <input type="text" name="no_telp" required placeholder="08xxxxxxxxx">
+        <button type="submit" class="btn">Cari Member</button>
+    </form>
+
+    <?php if ($member): ?>
+        <p><strong>Member:</strong> <?= $member['nama_member'] ?> | <strong>Poin:</strong> <?= number_format($member['point']) ?></p>
+    <?php endif; ?>
+
+    <!-- Hitung waktu tersisa -->
+    <?php $sisa_detik = $waktu_expired - (time() - $_SESSION['keranjang_waktu']); ?>
+    <div class="countdown">⏳ Sisa waktu checkout: <span id="timer"><?= floor($sisa_detik / 60) ?>m <?= $sisa_detik % 60 ?>d</span></div>
+
     <?php if (!empty($_SESSION['keranjang'])): ?>
-
-        <?php $sisa_detik = $waktu_expired - (time() - $_SESSION['keranjang_waktu']); ?>
-
-        <div class="countdown">
-            ⏳ Waktu checkout: <span id="timer"><?= floor($sisa_detik / 60) ?>m <?= $sisa_detik % 60 ?>d</span>
-        </div>
-
-        <form method="post" action="">
-            <label for="fid_member">Pilih Member (opsional):</label>
-            <select name="fid_member" onchange="this.form.submit()">
-                <option value="">-- Tanpa Member --</option>
-                <?php
-                $list = mysqli_query($conn, "SELECT * FROM member WHERE status = 'aktif'");
-                while ($m = mysqli_fetch_assoc($list)) {
-                    $selected = $fid_member == $m['id_member'] ? "selected" : "";
-                    echo "<option value='$m[id_member]' $selected>$m[nama_member] (Poin: $m[point])</option>";
-                }
-                ?>
-            </select>
-        </form>
-
         <table>
             <thead>
                 <tr>
-                    <th>Nama Produk</th>
+                    <th>Nama</th>
                     <th>Harga</th>
                     <th>Qty</th>
                     <th>Subtotal</th>
@@ -189,46 +120,61 @@ if (!empty($_SESSION['keranjang'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($_SESSION['keranjang'] as $item): 
-                    $subtotal = $item['harga'] * $item['qty']; ?>
-                    <tr>
-                        <td><?= $item['nama'] ?></td>
-                        <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
-                        <td>
-                            <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=kurang" class="qty-btn">−</a>
-                            <?= $item['qty'] ?>
-                            <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=tambah" class="qty-btn">+</a>
-                        </td>
-                        <td>Rp <?= number_format($subtotal, 0, ',', '.') ?></td>
-                        <td><a href="../service/hapus-keranjang.php?id=<?= $item['id_produk'] ?>" class="btn hapus">Hapus</a></td>
-                    </tr>
-                <?php endforeach; ?>
+            <?php foreach ($_SESSION['keranjang'] as $item): 
+                $subtotal = $item['harga'] * $item['qty']; ?>
+                <tr>
+                    <td><?= $item['nama'] ?></td>
+                    <td>Rp <?= number_format($item['harga'], 0, ',', '.') ?></td>
+                    <td>
+                        <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=kurang" class="qty-btn">−</a>
+                        <?= $item['qty'] ?>
+                        <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=tambah" class="qty-btn">+</a>
+                    </td>
+                    <td>Rp <?= number_format($subtotal, 0, ',', '.') ?></td>
+                    <td><a href="../service/hapus-keranjang.php?id=<?= $item['id_produk'] ?>" class="btn hapus">Hapus</a></td>
+                </tr>
+            <?php endforeach; ?>
             </tbody>
         </table>
 
+        <!-- Total -->
         <div class="total">
             Total: Rp <?= number_format($total, 0, ',', '.') ?><br>
-            <?php if ($member): ?>
-                Diskon dari poin: Rp <?= number_format($poin_diskon, 0, ',', '.') ?><br>
+            <?php if ($poin_diskon > 0): ?>
+                Diskon Poin: Rp <?= number_format($poin_diskon, 0, ',', '.') ?><br>
                 <strong>Grand Total: Rp <?= number_format($total - $poin_diskon, 0, ',', '.') ?></strong>
             <?php endif; ?>
         </div>
 
-        <a href="../service/hapus-semua-keranjang.php" class="btn kosongkan">🗑️ Kosongkan Keranjang</a>
-        <a href="checkout.php" class="btn checkout">Checkout</a>
+        <!-- Form Checkout -->
+        <form method="post" action="checkout.php">
+            <label><strong>Pilih Metode Pembayaran:</strong></label><br>
+            <input type="radio" name="metode_pembayaran" value="Tunai" required> Tunai<br>
+            <input type="radio" name="metode_pembayaran" value="QRIS"> QRIS<br><br>
+
+            <input type="hidden" name="total" value="<?= $total ?>">
+            <input type="hidden" name="diskon" value="<?= $poin_diskon ?>">
+            <button type="submit" class="btn checkout">Checkout</button>
+        </form>
+
+        <a href="../service/hapus-semua-keranjang.php" class="btn kosongkan">🗑 Kosongkan</a>
 
     <?php else: ?>
-        <p class="empty-message">Keranjang masih kosong 😢</p>
+        <p style="text-align:center;">Keranjang masih kosong 😢</p>
     <?php endif; ?>
 </div>
 
 <script>
     let seconds = <?= $sisa_detik ?>;
+
     function updateTimer() {
         if (seconds <= 0) {
             clearInterval(timer);
-            alert("Waktu checkout habis. Keranjang akan dikosongkan.");
-            location.reload();
+            if (!localStorage.getItem('keranjangExpired')) {
+                localStorage.setItem('keranjangExpired', 'true');
+                alert("Waktu checkout habis. Halaman akan dimuat ulang.");
+                location.reload();
+            }
         } else {
             let m = Math.floor(seconds / 60);
             let s = seconds % 60;
@@ -236,7 +182,16 @@ if (!empty($_SESSION['keranjang'])) {
             seconds--;
         }
     }
+
+    // Bersihkan localStorage setelah reload (biar bisa alert lagi kalau keranjang baru)
+    window.onload = function() {
+        if (localStorage.getItem('keranjangExpired')) {
+            localStorage.removeItem('keranjangExpired');
+        }
+    }
+
     let timer = setInterval(updateTimer, 1000);
 </script>
+
 </body>
 </html>

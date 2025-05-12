@@ -3,8 +3,7 @@ include '../service/conection.php';
 
 // Simpan Transaksi
 if (isset($_POST['simpan_transaksi'])) {
-    $nama = $_POST['nama'];
-    $tgl = date('Y-m-d');
+    $tgl_pembelian = date('Y-m-d');
     $fid_admin = $_POST['fid_admin'];
     $fid_produk = $_POST['fid_produk'];
     $detail = $_POST['detail'];
@@ -13,8 +12,8 @@ if (isset($_POST['simpan_transaksi'])) {
 
     // Simpan ke tabel transaksi
     mysqli_query($conn, "INSERT INTO transaksi 
-        (nama_pembeli, tgl, fid_admin, fid_produk, detail, fid_member, total_harga)
-        VALUES ('$nama', '$tgl', $fid_admin, $fid_produk, '$detail', $fid_member, $total_harga)");
+        (tgl_pembelian, fid_admin, fid_produk, detail, fid_member, total_harga)
+        VALUES ('$tgl_pembelian', $fid_admin, $fid_produk, '$detail', $fid_member, $total_harga)");
 
     // Jika ada member aktif
     if (!empty($fid_member)) {
@@ -22,7 +21,7 @@ if (isset($_POST['simpan_transaksi'])) {
         if ($cek) {
             $poin = floor($total_harga / 10000);
             mysqli_query($conn, "UPDATE member SET point = point + $poin WHERE id_member = $fid_member");
-            mysqli_query($conn, "INSERT INTO poin_log (id_member, poin, keterangan) VALUES ($fid_member, $poin, 'Transaksi pada $tgl')");
+            mysqli_query($conn, "INSERT INTO poin_log (id_member, poin, keterangan) VALUES ($fid_member, $poin, 'Transaksi pada $tgl_pembelian')");
         }
     }
 
@@ -74,41 +73,12 @@ if (isset($_POST['simpan_transaksi'])) {
 <div class="content">
     <h2>Halaman Transaksi</h2>
 
-    <form method="POST">
-        <label>Nama Pembeli</label>
-        <input type="text" name="nama" required>
-
-        <label>FID Admin</label>
-        <input type="number" name="fid_admin" required>
-
-        <label>FID Produk</label>
-        <input type="number" name="fid_produk" required>
-
-        <label>Detail</label>
-        <input type="text" name="detail" required>
-
-        <label>Member (Opsional)</label>
-        <select name="fid_member">
-            <option value="">-- Pilih Member --</option>
-            <?php
-            $member = mysqli_query($conn, "SELECT * FROM member WHERE status='aktif'");
-            while ($m = mysqli_fetch_assoc($member)) {
-                echo "<option value='{$m['id_member']}'>{$m['nama_member']} - {$m['no_telp']}</option>";
-            }
-            ?>
-        </select>
-
-        <label>Total Harga</label>
-        <input type="number" name="total_harga" required>
-
-        <button type="submit" name="simpan_transaksi">Simpan Transaksi</button>
-    </form>
+    
 
     <table>
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Nama Pembeli</th>
                 <th>Tanggal</th>
                 <th>Admin</th>
                 <th>Produk</th>
@@ -129,8 +99,7 @@ if (isset($_POST['simpan_transaksi'])) {
             while ($row = mysqli_fetch_assoc($q)) {
                 echo "<tr>
                         <td>{$row['id_transaksi']}</td>
-                        <td>{$row['nama_pembeli']}</td>
-                        <td>{$row['tgl']}</td>
+                        <td>{$row['tgl_pembelian']}</td>
                         <td>{$row['fid_admin']}</td>
                         <td>" . ($row['nama_produk'] ?? '-') . "</td>
                         <td>{$row['detail']}</td>

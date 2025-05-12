@@ -156,7 +156,7 @@ while ($row = mysqli_fetch_assoc($bulananQuery)) {
             <li><a href="dashboard.php">⚙️ Dashboard</a></li>
             <li><a href="kategori.php">📂 Kategori</a></li>
             <li><a href="produk.php">📦 Produk</a></li>
-            <li><a href="../service/index.php">↩️ Log out</a></li>
+            <li><a href="../service/logout.php">↩️ Log out</a></li>
         </ul>
     </div>
     <div class="main-content">
@@ -164,7 +164,7 @@ while ($row = mysqli_fetch_assoc($bulananQuery)) {
     <span class="date" id="currentDate"></span>
     <div class="account-info">
         <a href="profile.php" style="display: flex; align-items: center; text-decoration: none; color: black;">
-            <img src="../assets/admin.jpg" alt="user" class="user-icon">
+            <img src="../assets/admin.jpg" alt="user"    class="user-icon">
             <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
         </a>
     </div>

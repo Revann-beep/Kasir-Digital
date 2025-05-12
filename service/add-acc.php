@@ -1,3 +1,38 @@
+<?php
+include '../service/conection.php'; // pastikan koneksi berhasil
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Amankan password
+
+    // Upload file jika ada
+    $gambar = null;
+    if (!empty($_FILES['gambar']['name'])) {
+        $target_dir = "../uploads/";
+        if (!file_exists($target_dir)) {
+            mkdir($target_dir, 0777, true); // buat folder jika belum ada
+        }
+        $nama_file = time() . '_' . basename($_FILES["gambar"]["name"]);
+        $target_file = $target_dir . $nama_file;
+        if (move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_file)) {
+            $gambar = $nama_file;
+        }
+    }
+
+    // Simpan ke database
+    $sql = "INSERT INTO admin (email, username, password, gambar) VALUES ('$email', '$username', '$password', '$gambar')";
+    if (mysqli_query($conn, $sql)) {
+        header("Location: ../admin/admin.php");
+        exit;
+    } else {
+        echo "Gagal menambahkan admin: " . mysqli_error($conn);
+    }
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

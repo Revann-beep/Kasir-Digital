@@ -1,16 +1,16 @@
 <?php
+session_start();
 $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "kasir";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
-
 if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
-// Menangani pencarian
+// Tangani pencarian
 $searchQuery = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $searchQuery = $_POST['search'];
@@ -18,8 +18,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
 $sql = "SELECT * FROM admin WHERE email LIKE '%$searchQuery%' OR username LIKE '%$searchQuery%'";
 $admins = $conn->query($sql);
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -28,17 +26,11 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
     <style>
-         body {
+        body {
             margin: 0;
             font-family: Arial, sans-serif;
             display: flex;
-            min-height: 100vh;
-        }
-        .container {
-            display: flex;
-            width: 100%;
             min-height: 100vh;
         }
         .sidebar {
@@ -48,19 +40,17 @@ $conn->close();
             color: white;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
         }
         .sidebar ul {
             list-style: none;
             padding: 0;
-            flex-grow: 1;
         }
         .sidebar ul li {
             padding: 10px;
-            cursor: pointer;
         }
-        .sidebar ul .active {
-            color: #c74e1b;
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
         }
         .content {
             flex-grow: 1;
@@ -69,7 +59,7 @@ $conn->close();
         .top-bar {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
+            padding: 10px 0;
         }
         .admin-header {
             display: flex;
@@ -103,6 +93,14 @@ $conn->close();
         .icon {
             cursor: pointer;
         }
+        .status-aktif {
+            color: green;
+            font-weight: bold;
+        }
+        .status-nonaktif {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -112,28 +110,31 @@ $conn->close();
         <li><a href="dashboard.php">⚙️ Dashboard</a></li>
         <li><a href="kategori.php">📂 Kategori</a></li>
         <li><a href="produk.php">📦 Produk</a></li>
-        <li><a href="../service/index.php">↩️ Log out</a></li>
+        <li><a href="../service/logout.php">↩️ Log out</a></li>
     </ul>
 </div>
+
 <main class="content">
     <header class="top-bar">
-        <!-- Form pencarian -->
-        <form method="POST" action=""   >
-            <input type="text" name="search" class="search-bar" placeholder="Search by email or username" value="<?= htmlspecialchars($searchQuery) ?>">
+        <form method="POST" action="">
+            <input type="text" name="search" placeholder="Search by email or username" value="<?= htmlspecialchars($searchQuery) ?>">
             <button type="submit">🔍</button>
         </form>
     </header>
+
     <section class="admin-dashboard">
         <div class="admin-header">
             <h3>Halaman Admin</h3>
             <button onclick="window.location.href='../service/add-acc.php'">+ Add Admin</button>
         </div>
+
         <table>
             <tr>
                 <th>ID</th>
                 <th>Email</th>
                 <th>Username</th>
                 <th>Gambar</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
             <?php while ($row = $admins->fetch_assoc()) { ?>
@@ -142,10 +143,15 @@ $conn->close();
                 <td><?= $row['email'] ?></td>
                 <td><?= $row['username'] ?></td>
                 <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50"></td>
+                <td>
+                    <span class="<?= $row['status'] === 'Aktif' ? 'status-aktif' : 'status-nonaktif' ?>">
+                        <?= $row['status'] ?>
+                    </span>
+                </td>
                 <td class="action-icons">
                     <span class="icon" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
                     <form action="../service/delete-acc.php" method="POST" style="display:inline;">
-                        <input type="hidden" name="id" value="<?= htmlspecialchars($row['id']) ?>">
+                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
                         <button type="submit" name="delete" onclick="return confirm('Hapus admin ini?')">🗑️</button>
                     </form>
                 </td>
@@ -156,3 +162,4 @@ $conn->close();
 </main>
 </body>
 </html>
+<?php $conn->close(); ?>

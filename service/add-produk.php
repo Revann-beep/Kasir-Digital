@@ -7,9 +7,15 @@ if (isset($_POST['submit'])) {
     $modal = $_POST['modal'];
     $harga = $_POST['harga'];
     $barcode = htmlspecialchars($_POST['barcode']);
-    $kategori = $_POST['kategori'];
+    $kategori_nama = $_POST['kategori'];  // Mengambil nama kategori
     $deskripsi = htmlspecialchars($_POST['deskripsi']);
     $keuntungan = $harga - $modal;
+
+    // Cari ID Kategori berdasarkan Nama Kategori
+    $kategori_sql = "SELECT id_kategori FROM kategori WHERE nama_kategori = '$kategori_nama'";
+    $kategori_result = mysqli_query($conn, $kategori_sql);
+    $kategori_data = mysqli_fetch_assoc($kategori_result);
+    $kategori = $kategori_data['id_kategori'];
 
     // Upload gambar
     $gambar = $_FILES['gambar']['name'];
@@ -26,6 +32,7 @@ if (isset($_POST['submit'])) {
     header("Location: ../admin/produk.php");
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -117,8 +124,18 @@ if (isset($_POST['submit'])) {
         <label for="harga">Harga Jual</label>
         <input type="number" name="harga" id="harga" placeholder="Harga Jual" required>
 
-        <label for="kategori">ID Kategori</label>
-        <input type="number" name="kategori" id="kategori" placeholder="Kategori" required>
+        <label for="kategori">Nama Kategori</label>
+<select name="kategori" id="kategori" required>
+    <?php
+    // Ambil semua kategori dari database
+    $kategori_sql = "SELECT nama_kategori FROM kategori";
+    $kategori_result = mysqli_query($conn, $kategori_sql);
+    while ($kategori = mysqli_fetch_assoc($kategori_result)) {
+        echo "<option value='" . $kategori['nama_kategori'] . "'>" . $kategori['nama_kategori'] . "</option>";
+    }
+    ?>
+</select>
+
 
         <label for="deskripsi">Deskripsi</label>
         <textarea name="deskripsi" id="deskripsi" rows="3" placeholder="Deskripsi Produk" required></textarea>

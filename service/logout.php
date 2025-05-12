@@ -1,7 +1,10 @@
 <?php
-session_start();
-session_unset();
+session_start();    
+if (isset($_SESSION['admin_id'])) {
+    $id = $_SESSION['admin_id'];
+    $conn = new mysqli("localhost", "root", "", "kasir");
+    $conn->query("UPDATE admin SET status = 'Tidak Aktif' WHERE id = $id");
+}
 session_destroy();
- 
-header("Location: index.php");
-exit();
+header("Location: index.php"); // kembali ke halaman login
+exit;

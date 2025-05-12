@@ -93,9 +93,31 @@
         width: 100%;
       }
     }
+
+    .back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
+
   </style>
 </head>
 <body>
+
+<a href="../admin/produk.php" class="back-button">🔙 Kembali ke Produk</a>
+
 
   <h2>Scan Barcode Produk</h2>
 
