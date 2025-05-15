@@ -41,212 +41,296 @@ $total_poin_sekarang = isset($transaksi['poin']) ? $transaksi['poin'] : 0;
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Invoice Transaksi</title>
   <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 10px;
-      font-size: 13px;
-      background: #f9f9f9;
-      color: #333;
+      padding: 30px;
+      font-size: 14px;
+      background: #f0f2f5;
+      color: #2c3e50;
       max-width: 900px;
       margin: auto;
+      line-height: 1.5;
     }
+
     h2 {
       text-align: center;
-      font-size: 22px;
-      margin-bottom: 20px;
-      color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 30px;
+      font-weight: 700;
+      color: #27ae60;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      user-select: none;
     }
+
     .invoice-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
-      background: #fff;
-      padding: 12px;
-      border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 20px;
     }
-    .invoice-info div {
-      width: 48%;
+
+    .invoice-info > div {
+      flex: 1 1 45%;
+      min-width: 250px;
     }
+
     .invoice-info strong {
       display: block;
-      margin-bottom: 4px;
-      color: #555;
-      font-size: 13px;
-    }
-    .invoice-info span {
+      margin-bottom: 6px;
+      color: #34495e;
       font-weight: 600;
-      color: #000;
-      margin-bottom: 8px;
-      display: block;
       font-size: 13px;
+      letter-spacing: 0.03em;
     }
-    h3 {
-      margin-top: 25px;
-      font-size: 16px;
+
+    .invoice-info span {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
       color: #2c3e50;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
+      margin-bottom: 16px;
+      user-select: text;
     }
+
+    h3 {
+      font-size: 20px;
+      color: #27ae60;
+      margin-bottom: 15px;
+      border-bottom: 3px solid #27ae60;
+      padding-bottom: 8px;
+      font-weight: 700;
+      user-select: none;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
-      background: #fff;
-      box-shadow: 0 0 5px rgba(0,0,0,0.05);
-      font-size: 12px;
+      background: white;
+      box-shadow: 0 4px 10px rgb(0 0 0 / 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 14px;
+      margin-bottom: 40px;
     }
-    th, td {
-      padding: 8px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    th {
-      background-color: #2ecc71;
+
+    thead tr {
+      background-color: #27ae60;
       color: white;
       text-transform: uppercase;
-      font-size: 11px;
+      font-weight: 700;
+      user-select: none;
     }
-    td {
-      font-size: 12px;
+
+    th, td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid #ecf0f1;
     }
-    tr:last-child td {
+
+    tbody tr:hover {
+      background-color: #ecf9f1;
+    }
+
+    tbody tr:last-child td {
       border-bottom: none;
     }
+
     .total-row td {
-      font-weight: bold;
-      background-color: #f0f0f0;
+      font-weight: 700;
+      background-color: #f9f9f9;
+      color: #2c3e50;
+      font-size: 15px;
     }
-    .print-btn {
-      text-align: center;
-      margin-top: 20px;
+
+    .total-row td:first-child {
+      text-align: right;
+      font-style: italic;
     }
-    button {
-      font-size: 13px;
-      padding: 8px 20px;
+
+    /* Poin member table */
+    .poin-table {
+      width: 300px;
       border: none;
-      border-radius: 4px;
-      background-color: #3498db;
-      color: white;
+      margin-bottom: 50px;
+    }
+
+    .poin-table td {
+      padding: 10px 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: #27ae60;
+      user-select: text;
+    }
+
+    .poin-table td:first-child {
+      font-weight: 400;
+      color: #34495e;
+      width: 160px;
+    }
+
+    /* Button group */
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    button, .back-button {
+      font-size: 14px;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 30px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-    @media print {
-      .print-btn {
-        display: none;
-      }
-      body {
-        background: white;
-        padding: 5px;
-      }
-    }
-    .back-button {
-      display: inline-block;
-      margin-left: 10px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+      box-shadow: 0 4px 8px rgb(39 174 96 / 0.35);
+      font-weight: 600;
       text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #1e8449;
+    }
+
+    .back-button {
+      background-color: #bdc3c7;
+      color: #2c3e50;
+      border: 1px solid transparent;
+    }
+
+    .back-button:hover {
       background-color: #95a5a6;
       color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 13px;
-      transition: background-color 0.3s ease;
+      border-color: #27ae60;
     }
-    .back-button:hover {
-      background-color: #7f8c8d;
+
+    /* Print style */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .btn-group {
+        display: none;
+      }
+      h2 {
+        color: #2c3e50;
+      }
+      .invoice-info, table, .poin-table {
+        box-shadow: none;
+        border-radius: 0;
+      }
     }
   </style>
 </head>
 <body>
 
-<h2>INVOICE TRANSAKSI</h2>
+  <h2>INVOICE TRANSAKSI</h2>
 
-<div class="invoice-info">
-  <div>
-    <strong>ID Transaksi</strong>
-    <span><?= $transaksi['id_transaksi'] ?></span>
-    <strong>Tanggal</strong>
-    <span><?= $transaksi['tgl_pembelian'] ?></span>
-    <strong>Metode Pembayaran</strong>
-    <span><?= $transaksi['metode_pembayaran'] ?? 'Tunai' ?></span>
+  <div class="invoice-info">
+    <div>
+      <strong>ID Transaksi</strong>
+      <span><?= htmlspecialchars($transaksi['id_transaksi']) ?></span>
+      <strong>Tanggal</strong>
+      <span><?= htmlspecialchars($transaksi['tgl_pembelian']) ?></span>
+      <strong>Metode Pembayaran</strong>
+      <span><?= htmlspecialchars($transaksi['metode_pembayaran'] ?? 'Tunai') ?></span>
+    </div>
+    <div>
+      <strong>Admin</strong>
+      <span><?= htmlspecialchars($transaksi['admin_nama']) ?></span>
+      <strong>Member</strong>
+      <span><?= htmlspecialchars($transaksi['nama_member'] ?? '-') ?></span>
+    </div>
   </div>
-  <div>
-    <strong>Admin</strong>
-    <span><?= $transaksi['admin_nama'] ?></span>
-    <strong>Member</strong>
-    <span><?= $transaksi['nama_member'] ?? '-' ?></span>
-  </div>
-</div>
 
-<h3>Detail Produk</h3>
-<table>
-  <thead>
-    <tr>
-      <th>No</th>
-      <th>Nama Produk</th>
-      <th>Qty</th>
-      <th>Harga</th>
-      <th>Subtotal</th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php 
-    $no = 1;
-    while($row = mysqli_fetch_assoc($query_detail)) { ?>
-    <tr>
-      <td><?= $no++ ?></td>
-      <td><?= $row['nama_produk'] ?></td>
-      <td><?= $row['qty'] ?></td>
-      <td>Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
-      <td>Rp<?= number_format($row['subtotal'], 0, ',', '.') ?></td>
-    </tr>
-    <?php } ?>
-    <tr class="total-row">
-      <td colspan="4">Total Sebelum Diskon</td>
-      <td>Rp<?= number_format($total_asli, 0, ',', '.') ?></td>
-    </tr>
-    <tr class="total-row">
-      <td colspan="4">Diskon Member</td>
-      <td>-Rp<?= number_format($diskon, 0, ',', '.') ?></td>
-    </tr>
-    <tr class="total-row">
-      <td colspan="4">Total Dibayar</td>
-      <td>Rp<?= number_format($transaksi['total_harga'], 0, ',', '.') ?></td>
-    </tr>
-    <tr class="total-row">
-      <td colspan="4">Uang Dibayar</td>
-      <td>Rp<?= number_format($transaksi['uang_dibayar'], 0, ',', '.') ?></td>
-    </tr>
-    <tr class="total-row">
-      <td colspan="4">Kembalian</td>
-      <td>Rp<?= number_format($transaksi['kembalian'], 0, ',', '.') ?></td>
-    </tr>
-  </tbody>
-</table>
-
-<?php if ($transaksi['fid_member']) : ?>
-  <h3>Informasi Poin Member</h3>
+  <h3>Detail Produk</h3>
   <table>
-    <tr>
-      <td>Poin Ditambahkan</td>
-      <td><?= $poin_ditambahkan ?> poin</td>
-    </tr>
-    <tr>
-      <td>Total Poin Saat Ini</td>
-      <td><?= $total_poin_sekarang ?> poin</td>
-    </tr>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Nama Produk</th>
+        <th>Qty</th>
+        <th>Harga</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php 
+      $no = 1;
+      while($row = mysqli_fetch_assoc($query_detail)) { ?>
+      <tr>
+        <td><?= $no++ ?></td>
+        <td><?= htmlspecialchars($row['nama_produk']) ?></td>
+        <td><?= htmlspecialchars($row['qty']) ?></td>
+        <td>Rp<?= number_format($row['harga'], 0, ',', '.') ?></td>
+        <td>Rp<?= number_format($row['subtotal'], 0, ',', '.') ?></td>
+      </tr>
+      <?php } ?>
+      <tr class="total-row">
+        <td colspan="4">Total Sebelum Diskon</td>
+        <td>Rp<?= number_format($total_asli, 0, ',', '.') ?></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4">Diskon Member</td>
+        <td>-Rp<?= number_format($diskon, 0, ',', '.') ?></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4">Total Dibayar</td>
+        <td>Rp<?= number_format($transaksi['total_harga'], 0, ',', '.') ?></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4">Uang Dibayar</td>
+        <td>Rp<?= number_format($transaksi['uang_dibayar'], 0, ',', '.') ?></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4">Kembalian</td>
+        <td>Rp<?= number_format($transaksi['kembalian'], 0, ',', '.') ?></td>
+      </tr>
+    </tbody>
   </table>
-<?php endif; ?>
 
-<div class="print-btn">
-  <button onclick="window.print()">🖨️ Cetak Invoice</button>
-  <a href="../Scanner/scan.php" class="back-button">🔙 Kembali Belanja</a>
-</div>
+  <?php if ($transaksi['fid_member']) : ?>
+    <h3>Informasi Poin Member</h3>
+    <table class="poin-table">
+      <tr>
+        <td>Poin Ditambahkan</td>
+        <td><?= $poin_ditambahkan ?> poin</td>
+      </tr>
+      <tr>
+        <td>Total Poin Saat Ini</td>
+        <td><?= $total_poin_sekarang ?> poin</td>
+      </tr>
+    </table>
+  <?php endif; ?>
+
+  <div class="btn-group">
+    <button onclick="window.print()">🖨️ Cetak Invoice</button>
+    <a href="../Scanner/scan.php" class="back-button">🔙 Kembali Belanja</a>
+  </div>
 
 </body>
 </html>

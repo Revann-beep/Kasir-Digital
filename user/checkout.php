@@ -2,11 +2,15 @@
 session_start();
 include '../service/conection.php';
 
+// Pastikan keranjang ada dan tidak kosong
 if (!isset($_SESSION['keranjang']) || empty($_SESSION['keranjang'])) {
     die("Keranjang kosong.");
 }
 
-$id_admin = $_SESSION['id_admin'] ?? 1; // Simulasi admin sementara
+// Ambil id admin (bisa disesuaikan sesuai login)
+$id_admin = $_SESSION['id_admin'] ?? 1;
+
+// Ambil id member dari session, jika tidak ada pakai NULL
 $fid_member = $_SESSION['fid_member'] ?? 'NULL';
 
 // Hitung total awal dari keranjang
@@ -18,13 +22,13 @@ foreach ($_SESSION['keranjang'] as $id_produk => $item) {
     $total_awal += $subtotal;
 }
 
-// Ambil metode pembayaran, default Tunai
+// Ambil metode pembayaran dari form, default 'Tunai'
 $metode = $_POST['metode_pembayaran'] ?? 'Tunai';
 
-// Ambil uang dibayar, default 0
+// Ambil uang dibayar dari form, default 0
 $uang_dibayar = isset($_POST['uang_dibayar']) ? (int) $_POST['uang_dibayar'] : 0;
 
-// Hitung diskon dari poin member
+// Hitung diskon dari poin member jika ada
 $diskon = 0;
 if ($fid_member !== 'NULL') {
     $q_poin = mysqli_query($conn, "SELECT poin FROM member WHERE id_member = $fid_member");
@@ -35,14 +39,16 @@ if ($fid_member !== 'NULL') {
         $poin_dipakai = floor($diskon / 100);
     }
 }
+
+// Hitung total bayar setelah diskon
 $total_bayar = $total_awal - $diskon;
 
-// Validasi uang dibayar hanya untuk metode Tunai
+// Validasi uang dibayar untuk metode Tunai
 if ($metode === 'Tunai' && $uang_dibayar < $total_bayar) {
     die("Uang tidak mencukupi untuk melakukan pembayaran.");
 }
 
-// Jika metode QRIS, anggap uang dibayar = total bayar, kembalian 0
+// Jika metode QRIS, anggap uang dibayar sama dengan total bayar, kembalian 0
 if ($metode === 'QRIS') {
     $uang_dibayar = $total_bayar;
     $kembalian = 0;
@@ -50,27 +56,28 @@ if ($metode === 'QRIS') {
     $kembalian = $uang_dibayar - $total_bayar;
 }
 
-// Simpan transaksi ke database
-mysqli_query($conn, "
+// Simpan transaksi ke tabel transaksi
+$sql_transaksi = "
     INSERT INTO transaksi (tgl_pembelian, total_harga, diskon, total_bayar, uang_dibayar, kembalian, metode_pembayaran, fid_admin, fid_member)
     VALUES (NOW(), $total_awal, $diskon, $total_bayar, $uang_dibayar, $kembalian, '$metode', $id_admin, " . ($fid_member === 'NULL' ? "NULL" : $fid_member) . ")
-");
+";
+mysqli_query($conn, $sql_transaksi);
 $id_transaksi = mysqli_insert_id($conn);
 
-// Simpan detail transaksi dan kurangi stok
+// Simpan detail transaksi dan update stok produk
 foreach ($_SESSION['keranjang'] as $id_produk => $item) {
     $id_produk = (int) $item['id_produk'];
     $qty = (int) $item['qty'];
     $harga = (int) $item['harga'];
     $subtotal = $harga * $qty;
 
-    // Simpan ke detail_transaksi
+    // Insert detail transaksi
     mysqli_query($conn, "
         INSERT INTO detail_transaksi (fid_transaksi, fid_produk, qty, harga, subtotal)
         VALUES ($id_transaksi, $id_produk, $qty, $harga, $subtotal)
     ");
 
-    // Kurangi stok produk
+    // Update stok produk
     mysqli_query($conn, "
         UPDATE produk SET stok = stok - $qty WHERE id_produk = $id_produk
     ");
@@ -87,11 +94,14 @@ if ($fid_member !== 'NULL') {
     mysqli_query($conn, "UPDATE member SET poin = poin + $poin_baru WHERE id_member = $fid_member");
 }
 
-// Kosongkan keranjang
+// Kosongkan keranjang dan waktu keranjang
 unset($_SESSION['keranjang']);
 unset($_SESSION['keranjang_waktu']);
 
-// Simpan data invoice di session
+// **Reset session member setelah checkout supaya tidak terbawa ke transaksi berikutnya**
+unset($_SESSION['fid_member']);
+
+// Simpan data invoice di session untuk halaman invoice
 $_SESSION['invoice'] = [
     'id_transaksi' => $id_transaksi,
     'total' => $total_awal,

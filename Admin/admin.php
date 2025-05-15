@@ -23,8 +23,8 @@ $admins = $conn->query($sql);
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard</title>
     <style>
         body {
@@ -32,6 +32,7 @@ $admins = $conn->query($sql);
             font-family: Arial, sans-serif;
             display: flex;
             min-height: 100vh;
+            background-color: #f4f4f4;
         }
         .sidebar {
             width: 200px;
@@ -44,54 +45,142 @@ $admins = $conn->query($sql);
         .sidebar ul {
             list-style: none;
             padding: 0;
+            margin-top: 20px;
         }
         .sidebar ul li {
-            padding: 10px;
+            padding: 10px 5px;
         }
         .sidebar ul li a {
             color: white;
             text-decoration: none;
+            font-weight: 600;
+            display: block;
+            transition: background-color 0.3s ease;
+            border-radius: 4px;
+        }
+        .sidebar ul li a:hover {
+            background-color: #a57700;
         }
         .content {
             flex-grow: 1;
             padding: 20px;
+            background-color: #fff;
+            box-shadow: inset 0 0 15px #ddd;
+            border-radius: 8px;
+            margin: 15px;
         }
         .top-bar {
             display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .top-bar form {
+            display: flex;
+            width: 300px;
+        }
+        .top-bar input[type="text"] {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1.5px solid #ccc;
+            border-radius: 6px 0 0 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        .top-bar input[type="text"]:focus {
+            outline: none;
+            border-color: #b8860b;
+            box-shadow: 0 0 6px #b8860b;
+        }
+        .top-bar button {
+            background-color: #b8860b;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 0 6px 6px 0;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            user-select: none;
+        }
+        .top-bar button:hover {
+            background-color: #9a6f02;
         }
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
+        }
+        .admin-header h3 {
+            margin: 0;
+            font-weight: 700;
+            color: #444;
         }
         .admin-header button {
-            background: #ccc;
+            background-color: #b8860b;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 16px;
+            font-weight: 700;
+            color: white;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+            user-select: none;
+        }
+        .admin-header button:hover {
+            background-color: #9a6f02;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
+            box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
         }
         table, th, td {
-            border: 1px solid black;
-            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px 15px;
             text-align: center;
+            font-size: 14px;
         }
         th {
-            background: yellow;
+            background-color: #ffcc00;
+            font-weight: 700;
+            color: #333;
+        }
+        img {
+            border-radius: 6px;
+            object-fit: cover;
         }
         .action-icons {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 15px;
         }
         .icon {
             cursor: pointer;
+            font-size: 18px;
+            transition: color 0.3s ease;
+            user-select: none;
+        }
+        .icon:hover {
+            color: #b8860b;
+        }
+        .action-icons form button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #c0392b;
+            transition: color 0.3s ease;
+            padding: 0;
+            user-select: none;
+        }
+        .action-icons form button:hover {
+            color: #e74c3c;
         }
         .status-aktif {
             color: green;
@@ -118,7 +207,7 @@ $admins = $conn->query($sql);
     <header class="top-bar">
         <form method="POST" action="">
             <input type="text" name="search" placeholder="Search by email or username" value="<?= htmlspecialchars($searchQuery) ?>">
-            <button type="submit">🔍</button>
+            <button type="submit" title="Search">🔍</button>
         </form>
     </header>
 
@@ -142,17 +231,17 @@ $admins = $conn->query($sql);
                 <td><?= $row['id'] ?></td>
                 <td><?= $row['email'] ?></td>
                 <td><?= $row['username'] ?></td>
-                <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50"></td>
+                <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50" height="50"></td>
                 <td>
                     <span class="<?= $row['status'] === 'Aktif' ? 'status-aktif' : 'status-nonaktif' ?>">
                         <?= $row['status'] ?>
                     </span>
                 </td>
                 <td class="action-icons">
-                    <span class="icon" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
-                    <form action="../service/delete-acc.php" method="POST" style="display:inline;">
+                    <span class="icon" title="Edit" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
+                    <form action="../service/delete-acc.php" method="POST" onsubmit="return confirm('Hapus admin ini?')" style="display:inline;">
                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                        <button type="submit" name="delete" onclick="return confirm('Hapus admin ini?')">🗑️</button>
+                        <button type="submit" name="delete" title="Delete">🗑️</button>
                     </form>
                 </td>
             </tr>

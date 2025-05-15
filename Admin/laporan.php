@@ -16,10 +16,9 @@ $query = mysqli_query($conn, "
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Halaman Laporan</title>
-    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             display: flex;
@@ -51,6 +50,7 @@ $query = mysqli_query($conn, "
         .main-content {
             flex-grow: 1;
             padding: 20px;
+            background-color: #f9f9f9;
         }
         .header {
             display: flex;
@@ -58,21 +58,45 @@ $query = mysqli_query($conn, "
             margin-bottom: 20px;
         }
         .header input {
-            padding: 5px;
+            padding: 5px 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            width: 200px;
         }
         .report-container {
             background: white;
             padding: 20px;
             border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .download-btn {
-            background-color: #ccc;
-            padding: 10px;
+            background-color: #b8860b;
+            color: white;
             border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 6px;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            box-shadow: 0 3px 6px rgba(184, 134, 11, 0.5);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
             margin-bottom: 10px;
+        }
+        .download-btn:hover {
+            background-color: #9a6f02;
+            box-shadow: 0 5px 10px rgba(154, 111, 2, 0.7);
+        }
+        .download-btn:active {
+            background-color: #7c5700;
+            box-shadow: inset 0 3px 6px rgba(124, 87, 0, 0.8);
+        }
+        .download-btn .icon {
+            font-size: 20px;
+            line-height: 1;
         }
         table {
             width: 100%;
@@ -103,11 +127,13 @@ $query = mysqli_query($conn, "
     </div>
     <div class="main-content">
         <div class="header">
-            <input type="text" placeholder="Search">
+            <input type="text" placeholder="Search" />
         </div>
         <div class="report-container">
             <h3>Halaman Laporan Mingguan</h3>
-            <button class="download-btn" onclick="window.print()">🖨️ Unduh Laporan</button>
+            <button class="download-btn" onclick="window.print()">
+                <span class="icon">🖨️</span> Unduh Laporan
+            </button>
             <table>
                 <thead>
                     <tr>

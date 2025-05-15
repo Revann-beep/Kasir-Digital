@@ -51,41 +51,50 @@ $result = mysqli_query($conn, $query);
     <meta charset="UTF-8">
     <title>Produk</title>
     <style>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
         body {
             display: flex;
-            font-family: Arial, sans-serif;
-            margin: 0;
+            min-height: 100vh;
+            background: #f4f4f4;
         }
-
         .sidebar {
-            width: 200px;
+            width: 250px;
             background: #b8860b;
             color: white;
             padding: 20px;
             height: 100vh;
         }
-
         .sidebar h2 {
             text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
-
         .sidebar ul {
             list-style: none;
-            padding: 0;
+            padding-left: 0;
         }
-
         .sidebar ul li {
-            padding: 10px;
+            margin-bottom: 15px;
         }
-
         .sidebar ul li a {
             color: white;
             text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
-
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
         .content {
             flex-grow: 1;
-            padding: 20px;
+            padding: 20px 30px;
         }
 
         .top-bar {
@@ -93,58 +102,145 @@ $result = mysqli_query($conn, $query);
             justify-content: space-between;
             margin-bottom: 20px;
             gap: 10px;
+            align-items: center;
         }
-
         .add-btn {
-            background: black;
-            color: white;
-            padding: 8px 12px;
+            background: #000;
+            color: #fff;
+            padding: 10px 16px;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+        }
+        .add-btn:hover {
+            background: #444;
+        }
+        .add-btn.green {
+            background: #2ecc71;
+        }
+        .add-btn.green:hover {
+            background: #27ae60;
+        }
+        form.search-form {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex-grow: 1;
+        }
+        form.search-form input[type="text"],
+        form.search-form select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            flex: 1;
+            min-width: 200px;
+            transition: border-color 0.3s ease;
+        }
+        form.search-form input[type="text"]:focus,
+        form.search-form select:focus {
+            border-color: #b8860b;
+            outline: none;
+        }
+        form.search-form button {
+            padding: 9px 16px;
+            background: #b8860b;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        form.search-form button:hover {
+            background: #a57608;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
         }
-
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px 10px;
+            border-bottom: 1px solid #ddd;
             text-align: center;
+            vertical-align: middle;
+            font-size: 14px;
         }
-
         th {
-            background: #caa800;
+            background: #b8860b;
             color: white;
+            font-weight: 700;
         }
-
-        .pagination a {
-            margin-right: 5px;
-            padding: 5px 10px;
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        td img {
+            max-width: 60px;
+            height: auto;
+            border-radius: 4px;
+        }
+        td a {
             text-decoration: none;
-            border-radius: 3px;
+            margin: 0 5px;
+            font-size: 18px;
+        }
+        td a:hover {
+            opacity: 0.7;
         }
 
-        .active-page {
-            background: #caa800;
-            color: white;
-        }
-
-        .inactive-page {
-            background: #eee;
-            color: black;
-        }
-
-        form.search-form {
+        .pagination {
+            margin-top: 25px;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pagination a {
+            padding: 8px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            color: #333;
+            background: #eee;
+            border: 1px solid transparent;
+        }
+        .pagination a.active-page {
+            background: #b8860b;
+            color: white;
+            border-color: #a57608;
+        }
+        .pagination a.inactive-page:hover {
+            background: #d6b12f;
+            color: white;
+            border-color: #a57608;
         }
 
-        form.search-form input,
-        form.search-form select {
-            padding: 6px;
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            form.search-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+            form.search-form input[type="text"],
+            form.search-form select {
+                width: 100%;
+            }
+            .add-btn {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -154,25 +250,28 @@ $result = mysqli_query($conn, $query);
     <ul>
         <li><a href="dashboard.php">⚙️ Dashboard</a></li>
         <li><a href="kategori.php">📂 Kategori</a></li>
-        <li><a href="produk.php">📦 Produk</a></li>
+        <li><a href="produk.php" style="background: rgba(255, 255, 255, 0.2); border-radius: 5px;">📦 Produk</a></li>
         <li><a href="../service/logout.php">↩️ Log out</a></li>
     </ul>
 </div>
 <div class="content">
-    <a href="../Scanner/Scan.php" class="add-btn" style="background: green; margin-bottom: 15px; display: inline-block;">🛒 Transaksi Sekarang</a>
+    <a href="../Scanner/Scan.php" class="add-btn green" style="margin-bottom: 20px;">🛒 Transaksi Sekarang</a>
 
     <div class="top-bar">
         <form method="GET" class="search-form">
             <input type="text" name="search" placeholder="Cari produk atau barcode..." value="<?= htmlspecialchars($keyword) ?>">
             <select name="kategori">
                 <option value="">Semua Kategori</option>
-                <?php while ($kat = mysqli_fetch_assoc($kategoriResult)) { ?>
+                <?php
+                // Reset pointer to reuse kategoriResult
+                mysqli_data_seek($kategoriResult, 0);
+                while ($kat = mysqli_fetch_assoc($kategoriResult)) { ?>
                     <option value="<?= $kat['id_kategori'] ?>" <?= $filter_kategori == $kat['id_kategori'] ? 'selected' : '' ?>>
-                        <?= $kat['nama_kategori'] ?>
+                        <?= htmlspecialchars($kat['nama_kategori']) ?>
                     </option>
                 <?php } ?>
             </select>
-            <button type="submit" class="add-btn">🔍</button>
+            <button type="submit">🔍</button>
         </form>
         <a href="../service/add-produk.php" class="add-btn">+ Add Product</a>
     </div>
@@ -197,21 +296,21 @@ $result = mysqli_query($conn, $query);
         <?php while ($row = mysqli_fetch_assoc($result)) { ?>
             <tr>
                 <td><?= $row['id_produk'] ?></td>
-                <td><img src="../assets/<?= $row['gambar'] ?>" alt="<?= $row['nama_produk'] ?>" style="width: 50px;"></td>
-                <td><?= $row['nama_produk'] ?></td>
+                <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="<?= htmlspecialchars($row['nama_produk']) ?>"></td>
+                <td><?= htmlspecialchars($row['nama_produk']) ?></td>
                 <td><?= $row['stok'] ?></td>
                 <td><?= number_format($row['modal'], 0, ',', '.') ?></td>
                 <td><?= number_format($row['harga_jual'], 0, ',', '.') ?></td>
                 <td><?= number_format($row['keuntungan'], 0, ',', '.') ?></td>
                 <td>
-                    <img src="../service/barcode.php?text=<?= $row['barcode'] ?>&size=60&orientation=horizontal&code=Code128" 
+                    <img src="../service/barcode.php?text=<?= urlencode($row['barcode']) ?>&size=60&orientation=horizontal&code=Code128" 
                          alt="barcode" style="width: 150px; height: 50px;">
                 </td>
-                <td><?= $row['nama_kategori'] ?></td>
-                <td><?= $row['deskripsi'] ?></td>
+                <td><?= htmlspecialchars($row['nama_kategori']) ?></td>
+                <td><?= htmlspecialchars($row['deskripsi']) ?></td>
                 <td>
-                    <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>">✏️</a>
-                    <a href="../service/delete-produk.php?id=<?= $row['id_produk'] ?>" onclick="return confirm('Yakin mau hapus?')">🗑️</a>
+                    <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>" title="Edit">✏️</a>
+                    <a href="../service/delete-produk.php?id=<?= $row['id_produk'] ?>" onclick="return confirm('Yakin mau hapus?')" title="Delete">🗑️</a>
                 </td>
             </tr>
         <?php } ?>
@@ -219,7 +318,7 @@ $result = mysqli_query($conn, $query);
     </table>
 
     <!-- Pagination -->
-    <div class="pagination" style="margin-top: 20px;">
+    <div class="pagination">
         <?php if ($totalPages > 1): ?>
             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                 <a href="?page=<?= $i ?>&search=<?= urlencode($keyword) ?>&kategori=<?= urlencode($filter_kategori) ?>"

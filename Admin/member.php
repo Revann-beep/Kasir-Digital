@@ -1,10 +1,12 @@
 <?php include '../service/conection.php'; ?>
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>CRUD Member</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CRUD Member - TimelessWatch.co</title>
     <style>
-        /* Reset default */
+       /* Reset default */
 * {
     margin: 0;
     padding: 0;
@@ -12,15 +14,71 @@
 }
 
 body {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: Arial, sans-serif;
     background-color: #f4f7f9;
     color: #333;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 200px;
+    background: #b8860b;
     padding: 20px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.sidebar h2 {
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    display: block;
+    transition: background-color 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.sidebar ul li a:hover {
+    background-color: #9a6f02;
+}
+
+.sidebar ul li a.active {
+    background-color: #9a6f02;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px 30px;
+    overflow-y: auto;
+    background-color: #fff;
+    box-shadow: inset 0 0 15px #ddd;
+    border-radius: 8px;
+    margin: 15px;
 }
 
 h2, h3 {
-    margin-bottom: 10px;
     color: #2c3e50;
+    margin-bottom: 10px;
 }
 
 /* Table Styling */
@@ -38,13 +96,13 @@ th, td {
     padding: 12px 16px;
     border-bottom: 1px solid #eaeaea;
     text-align: left;
+    font-size: 14px;
 }
 
 th {
     background: #3498db;
     color: white;
     text-transform: uppercase;
-    font-size: 14px;
 }
 
 tr:hover {
@@ -61,6 +119,8 @@ tr:hover {
     display: inline-block;
     text-align: center;
     transition: background 0.3s ease;
+    cursor: pointer;
+    user-select: none;
 }
 
 .btn-edit {
@@ -97,7 +157,9 @@ tr:hover {
     padding: 20px;
     border-radius: 10px;
     margin-top: 30px;
-    max-width: 500px;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
     box-shadow: 0 0 10px rgba(0,0,0,0.06);
 }
 
@@ -109,6 +171,7 @@ select {
     margin: 8px 0 16px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 14px;
 }
 
 label {
@@ -116,9 +179,10 @@ label {
     display: block;
 }
 
+/* Header bar with back button */
 .header-bar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -127,125 +191,150 @@ label {
     background-color: #555;
     color: white;
     border: none;
-    cursor: pointer;
     border-radius: 4px;
     transition: background 0.3s;
-    text-decoration: none; /* Supaya gak kelihatan seperti link biru */
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
 }
 
-
-
+.btn-back:hover {
+    background-color: #444;
+}
     </style>
 </head>
 <body>
 
-<div class="header-bar">
-<a href="dashboard.php" class="btn-back">← Kembali</a>
-
+<div class="sidebar">
+    <h2>TimelessWatch.co</h2>
+    <ul>
+        <li><a href="dashboard.php">⚙️ Dashboard</a></li>
+        <li><a href="kategori.php">📂 Kategori</a></li>
+        <li><a href="produk.php">📦 Produk</a></li>
+        <li><a href="member.php" class="active">👥 Member</a></li>
+        <li><a href="../service/logout.php">↩️ Log out</a></li>
+    </ul>
 </div>
-<h2 style="text-align: center; margin-top: -30px;">Data Member</h2>
 
+<div class="main-content">
+    <div class="header-bar">
+        <a href="dashboard.php" class="btn-back">← Kembali</a>
+    </div>
 
+    <h2>Data Member</h2>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Nama Member</th>
-        <th>No Telp</th>
-        <th>Point</th>
-        <th>Status</th>
-        <th>Aksi</th>
-    </tr>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Nama Member</th>
+            <th>No Telp</th>
+            <th>Poin</th>
+            <th>Status</th>
+            <th>Aksi</th>
+        </tr>
+        <?php
+        $data = mysqli_query($conn, "SELECT * FROM member");
+        while ($row = mysqli_fetch_assoc($data)) {
+            echo "<tr>
+                <td>{$row['id_member']}</td>
+                <td>".htmlspecialchars($row['nama_member'])."</td>
+                <td>".htmlspecialchars($row['no_telp'])."</td>
+                <td>{$row['poin']}</td>
+                <td>{$row['status']}</td>
+                <td>
+                    <a href='?edit={$row['id_member']}' class='btn btn-edit'>Edit</a>
+                    <a href='?hapus={$row['id_member']}' onclick='return confirm(\"Yakin hapus?\")' class='btn btn-delete'>Hapus</a>
+                </td>
+            </tr>";
+        }
+        ?>
+    </table>
+
     <?php
-    $data = mysqli_query($conn, "SELECT * FROM member");
-    while ($row = mysqli_fetch_array($data)) {
-        echo "<tr>
-            <td>$row[id_member]</td>
-            <td>$row[nama_member]</td>
-            <td>$row[no_telp]</td>
-            <td>$row[point]</td>
-            <td>$row[status]</td>
-            <td>
-                <a href='?edit=$row[id_member]' class='btn btn-edit'>Edit</a> |
-                <a href='?hapus=$row[id_member]' onclick='return confirm(\"Yakin hapus?\")' class='btn btn-delete'>Hapus</a>
-            </td>
-        </tr>";
+    // Inisialisasi variabel form
+    $nama = "";
+    $telp = "";
+    $poin = 0;
+    $status = "aktif";
+    $edit_id = 0;
+
+    if (isset($_GET['edit'])) {
+        $edit_id = intval($_GET['edit']);
+        $edit_query = mysqli_query($conn, "SELECT * FROM member WHERE id_member = $edit_id");
+        if ($edit_query && mysqli_num_rows($edit_query) > 0) {
+            $row = mysqli_fetch_assoc($edit_query);
+            $nama = $row['nama_member'];
+            $telp = $row['no_telp'];
+            $poin = $row['poin'];
+            $status = $row['status'];
+        }
     }
     ?>
-</table>
 
-<?php
-// Form tambah/edit
-$nama = ""; $telp = ""; $point = ""; $status = "aktif"; $edit_id = "";
+    <div class="form-container">
+        <h3><?= $edit_id ? "Edit Member" : "Tambah Member"; ?></h3>
+        <form method="POST" action="">
+            <input type="hidden" name="id_member" value="<?= $edit_id; ?>">
+            
+            <label>Nama Member</label>
+            <input type="text" name="nama_member" required value="<?= htmlspecialchars($nama); ?>">
 
-if (isset($_GET['edit'])) {
-    $edit_id = $_GET['edit'];
-    $edit_data = mysqli_query($conn, "SELECT * FROM member WHERE id_member=$edit_id");
-    $row = mysqli_fetch_array($edit_data);
-    $nama = $row['nama_member'];
-    $telp = $row['no_telp'];
-    $point = $row['point'];
-    $status = $row['status'];
-}
-?>
+            <label>No Telp</label>
+            <input type="text" name="no_telp" required value="<?= htmlspecialchars($telp); ?>">
 
-<div class="form-container">
-    <h3><?php echo $edit_id ? "Edit Member" : "Tambah Member"; ?></h3>
-    <form method="POST">
-        <input type="hidden" name="id_member" value="<?php echo $edit_id; ?>">
-        <label>Nama Member</label>
-        <input type="text" name="nama_member" required value="<?php echo $nama; ?>">
+            <label>Poin</label>
+            <input type="number" name="poin" min="0" value="<?= htmlspecialchars($poin); ?>">
 
-        <label>No Telp</label>
-        <input type="text" name="no_telp" required value="<?php echo $telp; ?>">
+            <label>Status</label>
+            <select name="status">
+                <option value="aktif" <?= $status == 'aktif' ? "selected" : ""; ?>>Aktif</option>
+                <option value="tidak aktif" <?= $status == 'tidak aktif' ? "selected" : ""; ?>>Tidak Aktif</option>
+            </select>
 
-        <label>Point</label>
-        <input type="number" name="point" value="<?php echo $point; ?>">
+            <button type="submit" name="simpan" class="btn btn-submit">Simpan</button>
+        </form>
+    </div>
 
-        <label>Status</label>
-        <select name="status">
-            <option value="aktif" <?php if($status == 'aktif') echo "selected"; ?>>Aktif</option>
-            <option value="tidak aktif" <?php if($status == 'tidak aktif') echo "selected"; ?>>Tidak Aktif</option>
-        </select>
+    <?php
+    // Proses simpan (insert/update)
+    if (isset($_POST['simpan'])) {
+        $id_member = intval($_POST['id_member']);
+        $nama_member = mysqli_real_escape_string($conn, $_POST['nama_member']);
+        $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
+        $poin = intval($_POST['poin']);
+        $status = mysqli_real_escape_string($conn, $_POST['status']);
 
-        <button type="submit" name="simpan" class="btn btn-submit">Simpan</button>
-    </form>
-</div>
+        if ($id_member > 0) {
+            // Update
+            $sql_update = "UPDATE member SET 
+                nama_member = '$nama_member', 
+                no_telp = '$no_telp', 
+                poin = $poin, 
+                status = '$status' 
+                WHERE id_member = $id_member";
+            mysqli_query($conn, $sql_update);
+        } else {
+            // Insert
+            $sql_insert = "INSERT INTO member (nama_member, no_telp, poin, status) 
+                VALUES ('$nama_member', '$no_telp', $poin, '$status')";
+            mysqli_query($conn, $sql_insert);
+        }
 
-<?php
-// Simpan (Insert/Update)
-if (isset($_POST['simpan'])) {
-    $id = $_POST['id_member'];
-    $nama = $_POST['nama_member'];
-    $telp = $_POST['no_telp'];
-    $point = $_POST['point'];
-    $status = $_POST['status'];
-
-    if ($id) {
-        // Update
-        mysqli_query($conn, "UPDATE member SET 
-            nama_member='$nama',
-            no_telp='$telp',
-            point='$point',
-            status='$status'
-            WHERE id_member=$id
-        ");
-    } else {
-        // Insert
-        mysqli_query($conn, "INSERT INTO member (nama_member, no_telp, point, status)
-            VALUES ('$nama', '$telp', '$point', '$status')");
+        echo "<script>window.location='member.php';</script>";
+        exit;
     }
 
-    echo "<script>window.location='member.php';</script>";
-}
-
-// Hapus
-if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    mysqli_query($conn, "DELETE FROM member WHERE id_member=$id");
-    echo "<script>window.location='member.php';</script>";
-}
-?>
+    // Proses hapus
+    if (isset($_GET['hapus'])) {
+        $hapus_id = intval($_GET['hapus']);
+        if ($hapus_id > 0) {
+            mysqli_query($conn, "DELETE FROM member WHERE id_member = $hapus_id");
+            echo "<script>window.location='member.php';</script>";
+            exit;
+        }
+    }
+    ?>
+</div>
 
 </body>
 </html>
