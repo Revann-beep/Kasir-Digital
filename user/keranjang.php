@@ -48,7 +48,7 @@ if (!empty($_SESSION['keranjang'])) {
     if ($fid_member) {
         $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member = $fid_member");
         $member = mysqli_fetch_assoc($q);
-        $poin_diskon = $member ? min($member['point'], floor($total / 1000)) * 1000 : 0;
+        $poin_diskon = $member ? min($member['poin'], floor($total / 100)) * 100 : 0;
     }
 }
 ?>
@@ -101,7 +101,7 @@ if (!empty($_SESSION['keranjang'])) {
     </form>
 
     <?php if ($member): ?>
-        <p><strong>Member:</strong> <?= $member['nama_member'] ?> | <strong>Poin:</strong> <?= number_format($member['point']) ?></p>
+        <p><strong>Member:</strong> <?= $member['nama_member'] ?> | <strong>Poin:</strong> <?= number_format($member['poin']) ?></p>
     <?php endif; ?>
 
     <!-- Hitung waktu tersisa -->
@@ -147,15 +147,33 @@ if (!empty($_SESSION['keranjang'])) {
         </div>
 
         <!-- Form Checkout -->
-        <form method="post" action="checkout.php">
-            <label><strong>Pilih Metode Pembayaran:</strong></label><br>
-            <input type="radio" name="metode_pembayaran" value="Tunai" required> Tunai<br>
-            <input type="radio" name="metode_pembayaran" value="QRIS"> QRIS<br><br>
+        <form method="post" action="checkout.php" onsubmit="return validateBayar()">
+    <label><strong>Pilih Metode Pembayaran:</strong></label><br>
+    <input type="radio" name="metode_pembayaran" value="Tunai" required> Tunai<br>
+    <input type="radio" name="metode_pembayaran" value="QRIS"> QRIS<br><br>
 
-            <input type="hidden" name="total" value="<?= $total ?>">
-            <input type="hidden" name="diskon" value="<?= $poin_diskon ?>">
-            <button type="submit" class="btn checkout">Checkout</button>
-        </form>
+    <label><strong>Uang Dibayar:</strong></label><br>
+    <input type="number" name="uang_dibayar" id="uang_dibayar" required><br><br>
+
+    <input type="hidden" name="total" value="<?= $total ?>">
+    <input type="hidden" name="diskon" value="<?= $poin_diskon ?>">
+    <input type="hidden" name="grand_total" value="<?= $total - $poin_diskon ?>">
+
+    <button type="submit" class="btn checkout">Checkout</button>
+</form>
+
+<script>
+function validateBayar() {
+    let bayar = parseInt(document.getElementById('uang_dibayar').value);
+    let total = <?= $total - $poin_diskon ?>;
+    if (bayar < total) {
+        alert("Uang dibayar kurang dari total belanja!");
+        return false;
+    }
+    return true;
+}
+</script>
+
 
         <a href="../service/hapus-semua-keranjang.php" class="btn kosongkan">🗑 Kosongkan</a>
 

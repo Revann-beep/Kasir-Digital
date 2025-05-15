@@ -98,7 +98,7 @@ $query = mysqli_query($conn, "
             <li><a href="dashboard.php">⚙️ Dashboard</a></li>
             <li><a href="kategori.php">📂 Kategori</a></li>
             <li><a href="produk.php">📦 Produk</a></li>
-            <li><a href="../service/index.php">↩️ Log out</a></li>
+            <li><a href="../service/logout.php">↩️ Log out</a></li>
         </ul>
     </div>
     <div class="main-content">

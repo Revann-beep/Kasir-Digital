@@ -3,48 +3,40 @@ session_start();
 require_once '../service/conection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
 
-    // Hindari SQL Injection
-    $username = mysqli_real_escape_string($conn, $username);
-    $password = mysqli_real_escape_string($conn, $password);
-
-    // Query cek username
     $query = "SELECT * FROM admin WHERE username='$username'";
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_assoc($result);
-        
-        // Cek password (pastikan sudah di-hash di database)
-        if ($password == $row['password']) { // Jika password tidak di-hash
+
+        // Jika password belum di-hash di database, pakai pengecekan langsung
+        if ($password == $row['password']) {
             $_SESSION['username'] = $row['username'];
+            $_SESSION['gambar'] = $row['gambar']; // Simpan gambar ke session
             header("Location: ../admin/dashboard.php");
             exit;
         } else {
-            echo "<script>alert('Username atau password salah!');</script>";
+            echo "<script>alert('Password salah!'); window.location.href='index.php';</script>";
+            exit;
         }
     } else {
-        echo "<script>alert('Username atau password salah!');</script>";
+        echo "<script>alert('Username tidak ditemukan!'); window.location.href='index.php';</script>";
+        exit;
     }
 }
 ?>
 
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Login Admin</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body {
             display: flex;
             justify-content: center;
@@ -123,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         <div class="right">
             <h2>Sign in</h2>
             <form method="POST" action="">
-            
                 <div class="input-group">
                     <label>Username:</label>
                     <input type="text" name="username" required>
@@ -134,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 </div>
                 <div class="links">
                     <span>Have already an account?</span>
-                    <a href="pass.php">forgot password?</a>
+                    <a href="pass.php">Forgot password?</a>
                 </div>
                 <button type="submit" class="login-btn">Login</button>
             </form>

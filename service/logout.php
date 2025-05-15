@@ -6,5 +6,5 @@ if (isset($_SESSION['admin_id'])) {
     $conn->query("UPDATE admin SET status = 'Tidak Aktif' WHERE id = $id");
 }
 session_destroy();
-header("Location: index.php"); // kembali ke halaman login
+header("Location: ../admin/index.php"); // kembali ke halaman login
 exit;

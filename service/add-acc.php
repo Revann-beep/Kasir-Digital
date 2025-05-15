@@ -6,22 +6,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Amankan password
 
+    // Inisialisasi variabel gambar
+    $gambar = NULL;
+
     // Upload file jika ada
-    $gambar = null;
     if (!empty($_FILES['gambar']['name'])) {
-        $target_dir = "../uploads/";
+        $target_dir = "../assets/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true); // buat folder jika belum ada
         }
-        $nama_file = time() . '_' . basename($_FILES["gambar"]["name"]);
+    
+        $ext = strtolower(pathinfo($_FILES["gambar"]["name"], PATHINFO_EXTENSION)); // Pastikan ekstensi dalam huruf kecil
+        $nama_file = 'admin_' . date('Ymd_His') . '.' . $ext;
         $target_file = $target_dir . $nama_file;
+
+        // Validasi ekstensi file
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (!in_array($ext, $allowed_extensions)) {
+            die("Ekstensi file tidak diizinkan. Hanya file dengan ekstensi: " . implode(', ', $allowed_extensions) . " yang diperbolehkan.");
+        }
         if (move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_file)) {
             $gambar = $nama_file;
         }
     }
 
     // Simpan ke database
-    $sql = "INSERT INTO admin (email, username, password, gambar) VALUES ('$email', '$username', '$password', '$gambar')";
+    $sql = "INSERT INTO admin (email, username, password, gambar) VALUES ('$email', '$username', '$password', " . ($gambar ? "'$gambar'" : "NULL") . ")";
     if (mysqli_query($conn, $sql)) {
         header("Location: ../admin/admin.php");
         exit;
@@ -30,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
-
 
 
 <!DOCTYPE html>

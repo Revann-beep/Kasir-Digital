@@ -66,7 +66,7 @@ if (isset($_POST['simpan_transaksi'])) {
         <li><a href="dashboard.php">Dashboard</a></li>
         <li><a href="kategori.php">Kategori</a></li>
         <li><a href="produk.php">Produk</a></li>
-        <li><a href="../service/index.php">Logout</a></li>
+        <li><a href="../service/logout.php">Logout</a></li>
     </ul>
 </div>
 
