@@ -12,10 +12,21 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_assoc($result);
 
-        // Jika password belum di-hash di database, pakai pengecekan langsung
+        // Jika password belum di-hash
         if ($password == $row['password']) {
+            // Simpan data ke session
+            $_SESSION['admin_id'] = $row['id']; // Tambahan untuk tracking
             $_SESSION['username'] = $row['username'];
-            $_SESSION['gambar'] = $row['gambar']; // Simpan gambar ke session
+            $_SESSION['gambar'] = $row['gambar'];
+
+            // Set semua admin jadi Nonaktif
+            $conn->query("UPDATE admin SET status = 'Nonaktif'");
+
+            // Set admin yang login jadi Aktif
+            $adminId = $row['id'];
+            $conn->query("UPDATE admin SET status = 'Aktif' WHERE id = $adminId");
+
+            // Arahkan ke dashboard
             header("Location: ../admin/dashboard.php");
             exit;
         } else {
@@ -28,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">

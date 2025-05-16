@@ -233,9 +233,11 @@ $admins = $conn->query($sql);
                 <td><?= $row['username'] ?></td>
                 <td><img src="../assets/<?= htmlspecialchars($row['gambar']) ?>" alt="Admin" width="50" height="50"></td>
                 <td>
-                    <span class="<?= $row['status'] === 'Aktif' ? 'status-aktif' : 'status-nonaktif' ?>">
-                        <?= $row['status'] ?>
-                    </span>
+                    <?php if ($row['id'] == $_SESSION['admin_id']): ?>
+                        <span class="status-aktif">aktif</span>
+                    <?php else: ?>
+                        <span class="status-nonaktif">nonaktif</span>
+                    <?php endif; ?>
                 </td>
                 <td class="action-icons">
                     <span class="icon" title="Edit" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
