@@ -48,7 +48,7 @@ $result = mysqli_query($conn, $query);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Produk</title>
     <style>
         * {
@@ -224,6 +224,45 @@ $result = mysqli_query($conn, $query);
             border-color: #a57608;
         }
 
+        /* Modal Styles */
+        #barcodeModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #barcodeModal > div {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 320px;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        #closeModal {
+            position: absolute;
+            top: 10px; right: 15px;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            user-select: none;
+        }
+        #modalBarcodeImg {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        #modalBarcodeText {
+            font-weight: bold;
+            font-size: 18px;
+            user-select: text;
+            word-break: break-all;
+        }
+
         @media (max-width: 768px) {
             .top-bar {
                 flex-direction: column;
@@ -263,7 +302,6 @@ $result = mysqli_query($conn, $query);
             <select name="kategori">
                 <option value="">Semua Kategori</option>
                 <?php
-                // Reset pointer to reuse kategoriResult
                 mysqli_data_seek($kategoriResult, 0);
                 while ($kat = mysqli_fetch_assoc($kategoriResult)) { ?>
                     <option value="<?= $kat['id_kategori'] ?>" <?= $filter_kategori == $kat['id_kategori'] ? 'selected' : '' ?>>
@@ -303,31 +341,70 @@ $result = mysqli_query($conn, $query);
                 <td><?= number_format($row['harga_jual'], 0, ',', '.') ?></td>
                 <td><?= number_format($row['keuntungan'], 0, ',', '.') ?></td>
                 <td>
-                    <img src="../service/barcode.php?text=<?= urlencode($row['barcode']) ?>&size=60&orientation=horizontal&code=Code128" 
-                         alt="barcode" style="width: 150px; height: 50px;">
+                    <img 
+                      src="../service/barcode.php?text=<?= urlencode($row['barcode']) ?>&size=60&orientation=horizontal&code=Code128" 
+                      alt="barcode" 
+                      style="width: 150px; height: 50px; cursor:pointer;" 
+                      class="barcode-img"
+                      data-barcode="<?= htmlspecialchars($row['barcode']) ?>"
+                      data-imgsrc="../service/barcode.php?text=<?= urlencode($row['barcode']) ?>&size=250&orientation=horizontal&code=Code128"
+                    >
                 </td>
                 <td><?= htmlspecialchars($row['nama_kategori']) ?></td>
                 <td><?= htmlspecialchars($row['deskripsi']) ?></td>
                 <td>
-                    <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>" title="Edit">✏️</a>
-                    <a href="../service/delete-produk.php?id=<?= $row['id_produk'] ?>" onclick="return confirm('Yakin mau hapus?')" title="Delete">🗑️</a>
+                    <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>" title="Edit" style="color: blue;">✏️</a>
+                    <a href="../service/hapus-produk.php?id=<?= $row['id_produk'] ?>" title="Delete" onclick="return confirm('Yakin ingin menghapus produk ini?')" style="color: red;">🗑️</a>
                 </td>
             </tr>
         <?php } ?>
         </tbody>
     </table>
 
-    <!-- Pagination -->
     <div class="pagination">
-        <?php if ($totalPages > 1): ?>
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <a href="?page=<?= $i ?>&search=<?= urlencode($keyword) ?>&kategori=<?= urlencode($filter_kategori) ?>"
-                   class="<?= $page == $i ? 'active-page' : 'inactive-page' ?>">
-                    <?= $i ?>
-                </a>
-            <?php endfor; ?>
-        <?php endif; ?>
+        <?php for ($i = 1; $i <= $totalPages; $i++) { ?>
+            <a href="?page=<?= $i ?>&search=<?= urlencode($keyword) ?>&kategori=<?= urlencode($filter_kategori) ?>"
+               class="<?= $i === $page ? 'active-page' : 'inactive-page' ?>">
+                <?= $i ?>
+            </a>
+        <?php } ?>
     </div>
 </div>
+
+<!-- Modal for barcode -->
+<div id="barcodeModal">
+    <div>
+        <span id="closeModal">&times;</span>
+        <img id="modalBarcodeImg" src="" alt="Barcode">
+        <div id="modalBarcodeText"></div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.barcode-img').forEach(img => {
+        img.addEventListener('click', () => {
+            const modal = document.getElementById('barcodeModal');
+            const modalImg = document.getElementById('modalBarcodeImg');
+            const modalText = document.getElementById('modalBarcodeText');
+            const barcode = img.getAttribute('data-barcode');
+            const imgSrc = img.getAttribute('data-imgsrc');
+
+            modalImg.src = imgSrc;
+            modalText.textContent = barcode;
+            modal.style.display = 'flex';
+        });
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('barcodeModal').style.display = 'none';
+    });
+
+    // Close modal if clicked outside modal content
+    document.getElementById('barcodeModal').addEventListener('click', (e) => {
+        if (e.target.id === 'barcodeModal') {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
 </body>
 </html>

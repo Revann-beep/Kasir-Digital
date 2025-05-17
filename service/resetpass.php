@@ -161,7 +161,7 @@ button:hover {
             if ($stmt) {
                 mysqli_stmt_bind_param($stmt, "ss", $hash, $email);
                 if (mysqli_stmt_execute($stmt)) {
-                    echo "<p class='success'>✅ Password berhasil direset! Silakan <a href='index.php'>login</a>.</p>";
+                    echo "<p class='success'>✅ Password berhasil direset! Silakan <a href='../admin/index.php'>login</a>.</p>";
                 } else {
                     echo "<p class='error'>❌ Gagal mereset password: " . mysqli_error($conn) . "</p>";
                 }

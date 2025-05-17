@@ -4,18 +4,18 @@ require_once '../service/conection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $password_input = $_POST['password']; // tidak perlu di-escape karena tidak disimpan ke DB langsung
 
     $query = "SELECT * FROM admin WHERE username='$username'";
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_assoc($result);
+        $hashed_password = $row['password'];
 
-        // Jika password belum di-hash
-        if ($password == $row['password']) {
+        if (password_verify($password_input, $hashed_password)) {
             // Simpan data ke session
-            $_SESSION['admin_id'] = $row['id']; // Tambahan untuk tracking
+            $_SESSION['admin_id'] = $row['id'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['gambar'] = $row['gambar'];
 
@@ -26,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $adminId = $row['id'];
             $conn->query("UPDATE admin SET status = 'Aktif' WHERE id = $adminId");
 
-            // Arahkan ke dashboard
             header("Location: ../admin/dashboard.php");
             exit;
         } else {
@@ -39,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="id">
@@ -137,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 </div>
                 <div class="links">
                     <span>Have already an account?</span>
-                    <a href="pass.php">Forgot password?</a>
+                    <a href="../service/pass.php">Forgot password?</a>
                 </div>
                 <button type="submit" class="login-btn">Login</button>
             </form>

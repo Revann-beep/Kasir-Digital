@@ -48,16 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #dfe9f3 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f0f4f8, #e0f7fa);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -66,88 +67,114 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .form-container {
             background: #ffffff;
-            padding: 30px 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 35px 30px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 360px;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .form-container h2 {
             margin-bottom: 25px;
-            color: #333;
+            color: #2c3e50;
             text-align: center;
+            font-weight: 600;
         }
 
         label {
             display: block;
-            margin-bottom: 6px;
-            color: #555;
-            font-weight: 600;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
         }
 
-        input[type="email"],
-        input[type="text"],
-        input[type="password"],
-        input[type="file"] {
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 10px 12px;
-            margin-bottom: 15px;
+            padding: 10px 12px 10px 40px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            transition: border-color 0.3s ease;
+            border-radius: 8px;
+            transition: border-color 0.3s;
         }
 
-        input:focus {
-            border-color: #4CAF50;
+        .input-group input:focus {
+            border-color: #3498db;
             outline: none;
         }
 
-        input[type="file"] {
-            padding: 5px;
+        .input-group i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
         }
 
         .btn {
             width: 100%;
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
             border: none;
             padding: 12px;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
             transition: background 0.3s ease;
         }
 
         .btn:hover {
-            background-color: #45a049;
+            background-color: #2980b9;
         }
 
-        @media (max-width: 400px) {
+        @media (max-width: 420px) {
             .form-container {
-                padding: 20px;
+                padding: 25px 20px;
             }
         }
     </style>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
 <div class="form-container">
-    <h2>Tambah Admin</h2>
+    <h2>➕ Tambah Admin</h2>
     <form action="add-acc.php" method="POST" enctype="multipart/form-data">
-        <label>Email:</label>
-        <input type="email" name="email" required>
+        <div class="input-group">
+            <label>Email:</label>
+            <i class="fas fa-envelope"></i>
+            <input type="email" name="email" required>
+        </div>
 
-        <label>Username:</label>
-        <input type="text" name="username" required>
+        <div class="input-group">
+            <label>Username:</label>
+            <i class="fas fa-user"></i>
+            <input type="text" name="username" required>
+        </div>
 
-        <label>Foto (Opsional):</label>
-        <input type="file" name="gambar" accept="image/*">
+        <div class="input-group">
+            <label>Foto (Opsional):</label>
+            <i class="fas fa-image"></i>
+            <input type="file" name="gambar" accept="image/*" style="padding-left: 40px;">
+        </div>
 
-        <label>Password:</label>
-        <input type="password" name="password" required>
+        <div class="input-group">
+            <label>Password:</label>
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" required>
+        </div>
 
-        <button type="submit" class="btn">➕ Tambah Admin</button>
+        <button type="submit" class="btn">Tambah Admin</button>
     </form>
 </div>
 

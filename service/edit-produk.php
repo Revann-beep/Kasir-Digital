@@ -56,7 +56,7 @@ if (isset($_POST['update'])) {
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -68,8 +68,8 @@ if (isset($_POST['update'])) {
             background-color: #fff;
             padding: 30px 40px;
             border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 450px;
         }
 
         .form-container h2 {
@@ -88,6 +88,7 @@ if (isset($_POST['update'])) {
         input[type="text"],
         input[type="number"],
         input[type="file"],
+        select,
         textarea {
             width: 100%;
             padding: 10px;
@@ -99,6 +100,15 @@ if (isset($_POST['update'])) {
 
         textarea {
             resize: vertical;
+        }
+
+        .form-container img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
         }
 
         button {
@@ -138,13 +148,27 @@ if (isset($_POST['update'])) {
         <label for="harga">Harga Jual</label>
         <input type="number" name="harga" id="harga" value="<?= $data['harga_jual'] ?>" required>
 
-        <label for="kategori">ID Kategori</label>
-        <input type="number" name="kategori" id="kategori" value="<?= $data['fid_kategori'] ?>" required>
+        <label for="kategori">Kategori</label>
+        <select name="kategori" id="kategori" required>
+            <?php
+            $kategori_sql = "SELECT * FROM kategori";
+            $kategori_result = mysqli_query($conn, $kategori_sql);
+            while ($kategori = mysqli_fetch_assoc($kategori_result)) {
+                $selected = $kategori['id_kategori'] == $data['fid_kategori'] ? 'selected' : '';
+                echo "<option value='{$kategori['id_kategori']}' $selected>{$kategori['nama_kategori']}</option>";
+            }
+            ?>
+        </select>
 
         <label for="deskripsi">Deskripsi</label>
         <textarea name="deskripsi" id="deskripsi" rows="3" required><?= $data['deskripsi'] ?></textarea>
 
-        <label for="gambar">Gambar Produk</label>
+        <?php if ($data['gambar']): ?>
+            <label>Gambar Saat Ini</label>
+            <img src="../assets/<?= $data['gambar'] ?>" alt="Gambar Produk">
+        <?php endif; ?>
+
+        <label for="gambar">Ganti Gambar (Opsional)</label>
         <input type="file" name="gambar" id="gambar">
 
         <button type="submit" name="update">Update Produk</button>

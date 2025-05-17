@@ -7,17 +7,15 @@ if (isset($_POST['submit'])) {
     $modal = $_POST['modal'];
     $harga = $_POST['harga'];
     $barcode = htmlspecialchars($_POST['barcode']);
-    $kategori_nama = $_POST['kategori'];  // Mengambil nama kategori
+    $kategori_nama = $_POST['kategori'];
     $deskripsi = htmlspecialchars($_POST['deskripsi']);
     $keuntungan = $harga - $modal;
 
-    // Cari ID Kategori berdasarkan Nama Kategori
     $kategori_sql = "SELECT id_kategori FROM kategori WHERE nama_kategori = '$kategori_nama'";
     $kategori_result = mysqli_query($conn, $kategori_sql);
     $kategori_data = mysqli_fetch_assoc($kategori_result);
     $kategori = $kategori_data['id_kategori'];
 
-    // Upload gambar
     $gambar = $_FILES['gambar']['name'];
     $tmp = $_FILES['gambar']['tmp_name'];
     $upload_path = "../assets/" . $gambar;
@@ -27,123 +25,144 @@ if (isset($_POST['submit'])) {
         (nama_produk, barcode, stok, modal, harga_jual, keuntungan, fid_kategori, gambar, deskripsi) 
         VALUES 
         ('$nama', '$barcode', '$stok', '$modal', '$harga', '$keuntungan', '$kategori', '$gambar', '$deskripsi')";
-
     mysqli_query($conn, $sql);
     header("Location: ../admin/produk.php");
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <title>Tambah Produk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
+        }
+
+        body {
+            background: linear-gradient(to right, #f1f1f1, #e0ffe0);
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 30px 10px;
             min-height: 100vh;
             margin: 0;
         }
 
         .form-container {
-            background-color: #fff;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            width: 400px;
+            background: #fff;
+            padding: 35px 30px;
+            border-radius: 14px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 100%;
         }
 
         .form-container h2 {
-            margin-bottom: 20px;
             text-align: center;
+            margin-bottom: 25px;
             color: #333;
         }
 
         label {
-            display: block;
+            font-weight: 600;
             margin-bottom: 6px;
-            font-weight: 500;
-            color: #555;
+            display: block;
+            color: #444;
         }
 
         input[type="text"],
         input[type="number"],
         input[type="file"],
-        textarea {
+        textarea,
+        select {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 10px 12px;
+            margin-bottom: 18px;
             border: 1px solid #ccc;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #4CAF50;
+            outline: none;
         }
 
         textarea {
             resize: vertical;
+            min-height: 80px;
         }
 
         button {
             width: 100%;
+            background-color: #4CAF50;
+            color: white;
             padding: 12px;
-            background-color: #28a745;
-            border: none;
-            color: #fff;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #218838;
+            background-color: #43a047;
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 25px 20px;
+            }
         }
     </style>
 </head>
 <body>
 
 <div class="form-container">
-    <h2>Tambah Produk</h2>
+    <h2>➕ Tambah Produk</h2>
     <form method="post" enctype="multipart/form-data">
         <label for="nama">Nama Produk</label>
-        <input type="text" name="nama" id="nama" placeholder="Nama Produk" required>
+        <input type="text" name="nama" id="nama" placeholder="Garmin 635" required>
 
-        <label for="barcode">Barcode Produk</label>
-        <input type="text" name="barcode" id="barcode" placeholder="Barcode" required>
+        <label for="barcode">Barcode</label>
+        <input type="text" name="barcode" id="barcode" placeholder="Contoh: 8991234567890" required>
 
-        <label for="stok">Jumlah Stok</label>
-        <input type="number" name="stok" id="stok" placeholder="Stok" required>
+        <label for="stok">Stok</label>
+        <input type="number" name="stok" id="stok" placeholder="Contoh: 100" required>
 
-        <label for="modal">Harga Modal</label>
-        <input type="number" name="modal" id="modal" placeholder="Modal" required>
+        <label for="modal">Harga Modal (Rp)</label>
+        <input type="number" name="modal" id="modal" placeholder="Contoh: 2500" required>
 
-        <label for="harga">Harga Jual</label>
-        <input type="number" name="harga" id="harga" placeholder="Harga Jual" required>
+        <label for="harga">Harga Jual (Rp)</label>
+        <input type="number" name="harga" id="harga" placeholder="Contoh: 3000" required>
 
-        <label for="kategori">Nama Kategori</label>
-<select name="kategori" id="kategori" required>
-    <?php
-    // Ambil semua kategori dari database
-    $kategori_sql = "SELECT nama_kategori FROM kategori";
-    $kategori_result = mysqli_query($conn, $kategori_sql);
-    while ($kategori = mysqli_fetch_assoc($kategori_result)) {
-        echo "<option value='" . $kategori['nama_kategori'] . "'>" . $kategori['nama_kategori'] . "</option>";
-    }
-    ?>
-</select>
-
+        <label for="kategori">Kategori</label>
+        <select name="kategori" id="kategori" required>
+            <option value="">-- Pilih Kategori --</option>
+            <?php
+            $kategori_sql = "SELECT nama_kategori FROM kategori";
+            $kategori_result = mysqli_query($conn, $kategori_sql);
+            while ($kategori = mysqli_fetch_assoc($kategori_result)) {
+                echo "<option value='" . $kategori['nama_kategori'] . "'>" . $kategori['nama_kategori'] . "</option>";
+            }
+            ?>
+        </select>
 
         <label for="deskripsi">Deskripsi</label>
-        <textarea name="deskripsi" id="deskripsi" rows="3" placeholder="Deskripsi Produk" required></textarea>
+        <textarea name="deskripsi" id="deskripsi" placeholder="Contoh: Kelebihan dan Kekurangan" required></textarea>
 
         <label for="gambar">Gambar Produk</label>
-        <input type="file" name="gambar" id="gambar" required>
+        <input type="file" name="gambar" id="gambar" accept="image/*" required>
 
-        <button type="submit" name="submit">Tambah Produk</button>
+        <button type="submit" name="submit">Simpan Produk</button>
     </form>
 </div>
 
