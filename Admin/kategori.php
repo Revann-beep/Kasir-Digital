@@ -16,12 +16,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
 }
 
-// Hapus
+// Hapus (dengan pengecekan relasi ke produk)
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $conn->query("DELETE FROM kategori WHERE id_kategori=$id");
-    header("Location: kategori.php");
-    exit();
+    $id = intval($_GET['delete']);
+
+    // Cek apakah kategori masih digunakan di tabel produk
+    $cek = $conn->query("SELECT COUNT(*) AS total FROM produk WHERE id_kategori = $id");
+    $data = $cek->fetch_assoc();
+
+    if ($data['total'] > 0) {
+        echo "<script>alert('Kategori tidak bisa dihapus karena masih digunakan oleh produk.'); window.location='kategori.php';</script>";
+    } else {
+        $conn->query("DELETE FROM kategori WHERE id_kategori=$id");
+        header("Location: kategori.php");
+        exit();
+    }
 }
 
 // Ambil data untuk form edit
@@ -51,8 +60,7 @@ if (isset($_GET['edit'])) {
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #C4A103; color: white; }
-        
-        /* Tombol utama form */
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -80,8 +88,7 @@ if (isset($_GET['edit'])) {
             font-size: 18px;
             line-height: 1;
         }
-        
-        /* Tombol aksi di tabel */
+
         td a.btn {
             padding: 6px 10px;
             font-size: 16px;

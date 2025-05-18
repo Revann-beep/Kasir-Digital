@@ -143,7 +143,7 @@ a:hover {
             <button type="submit">Reset Password</button>
         </form>
         
-        <p><a href="index.php">Kembali ke Login</a></p>
+        <p><a href="../admin/index.php">Kembali ke Login</a></p>
     </div>
 </body>
 </html>

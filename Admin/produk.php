@@ -354,7 +354,7 @@ $result = mysqli_query($conn, $query);
                 <td><?= htmlspecialchars($row['deskripsi']) ?></td>
                 <td>
                     <a href="../service/edit-produk.php?id=<?= $row['id_produk'] ?>" title="Edit" style="color: blue;">✏️</a>
-                    <a href="../service/hapus-produk.php?id=<?= $row['id_produk'] ?>" title="Delete" onclick="return confirm('Yakin ingin menghapus produk ini?')" style="color: red;">🗑️</a>
+                    <a href="../service/delete-produk.php?id=<?= $row['id_produk'] ?>" title="Delete" onclick="return confirm('Yakin ingin menghapus produk ini?')" style="color: red;">🗑️</a>
                 </td>
             </tr>
         <?php } ?>
