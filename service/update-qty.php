@@ -23,22 +23,28 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 
     $qty = $_SESSION['keranjang'][$id]['qty'];
 
-    if ($action == 'tambah') {
+    // Sesuaikan aksi berdasarkan tombol
+    if ($action == 'lebih') {
         if ($qty + 1 > $stok_db) {
             echo "<script>alert('Stok tidak mencukupi.');history.back();</script>";
             exit;
         }
         $_SESSION['keranjang'][$id]['qty'] += 1;
+
     } elseif ($action == 'kurang') {
         $_SESSION['keranjang'][$id]['qty'] -= 1;
         if ($_SESSION['keranjang'][$id]['qty'] <= 0) {
             unset($_SESSION['keranjang'][$id]);
         }
+    } else {
+        echo "<script>alert('Aksi tidak dikenali.');history.back();</script>";
+        exit;
     }
 
     // Perbarui waktu keranjang
     $_SESSION['keranjang_waktu'] = time();
 }
 
+// Redirect kembali ke halaman keranjang
 header("Location: ../user/keranjang.php");
 exit;

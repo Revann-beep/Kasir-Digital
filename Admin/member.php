@@ -1,13 +1,12 @@
 <?php 
 include '../service/conection.php';
 
-// --- Masa aktif member 1 menit = 60 detik
+// Masa aktif member 1 menit (60 detik)
 $durasi_aktif_detik = 60;
-
-// --- Ambil semua member aktif yang sudah expired
-$expired_members = [];
 $tgl_sekarang = date('Y-m-d H:i:s');
 
+// Cek member aktif yang sudah kadaluarsa
+$expired_members = [];
 $cek_query = mysqli_query($conn, "
     SELECT id_member, nama_member, tanggal_aktif 
     FROM member 
@@ -15,27 +14,26 @@ $cek_query = mysqli_query($conn, "
     AND TIMESTAMPDIFF(SECOND, tanggal_aktif, '$tgl_sekarang') >= $durasi_aktif_detik
 ");
 
-// Simpan id member expired untuk nanti update dan alert
 while ($row = mysqli_fetch_assoc($cek_query)) {
     $expired_members[] = $row;
 }
 
 if (count($expired_members) > 0) {
-    // Update semua member expired jadi tidak aktif
     $ids = array_column($expired_members, 'id_member');
     $ids_string = implode(',', $ids);
     mysqli_query($conn, "UPDATE member SET status = 'tidak aktif' WHERE id_member IN ($ids_string)");
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CRUD Member - TimelessWatch.co</title>
+<!-- (CSS sama seperti sebelumnya - tidak diubah) -->
 <style>
-    /* ... CSS sama seperti kode kamu sebelumnya ... */
+    /* CSS di sini sama seperti yang kamu kirim sebelumnya */
+    /* ... (CSS tidak ditampilkan untuk menghemat ruang) ... */
     * {
         margin: 0;
         padding: 0;
@@ -251,7 +249,6 @@ if (count($expired_members) > 0) {
     <?php
     $nama = "";
     $telp = "";
-    $poin = 0;
     $status = "aktif";
     $edit_id = 0;
 
@@ -262,7 +259,6 @@ if (count($expired_members) > 0) {
             $row = mysqli_fetch_assoc($edit_query);
             $nama = $row['nama_member'];
             $telp = $row['no_telp'];
-            $poin = $row['poin'];
             $status = $row['status'];
         }
     }
@@ -279,9 +275,6 @@ if (count($expired_members) > 0) {
             <label>No Telp</label>
             <input type="text" name="no_telp" required value="<?= htmlspecialchars($telp); ?>">
 
-            <label>Poin</label>
-            <input type="number" name="poin" min="0" value="<?= htmlspecialchars($poin); ?>">
-
             <label>Status</label>
             <select name="status">
                 <option value="aktif" <?= $status == 'aktif' ? "selected" : ""; ?>>Aktif</option>
@@ -297,30 +290,31 @@ if (count($expired_members) > 0) {
         $id_member = intval($_POST['id_member']);
         $nama_member = mysqli_real_escape_string($conn, $_POST['nama_member']);
         $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
-        $poin = intval($_POST['poin']);
         $status = mysqli_real_escape_string($conn, $_POST['status']);
 
+        // Cek duplikat no telp
+        $cek_duplikat = mysqli_query($conn, "
+            SELECT id_member FROM member 
+            WHERE no_telp = '$no_telp' 
+            AND id_member != $id_member
+        ");
+
+        if (mysqli_num_rows($cek_duplikat) > 0) {
+            echo "<script>alert('Nomor telepon sudah digunakan!'); window.location='member.php';</script>";
+            exit;
+        }
+
         if ($id_member > 0) {
-            if ($status === 'aktif') {
-                $sql_update = "UPDATE member SET 
-                    nama_member = '$nama_member', 
-                    no_telp = '$no_telp', 
-                    poin = $poin, 
-                    status = '$status',
-                    tanggal_aktif = NOW()
-                    WHERE id_member = $id_member";
-            } else {
-                $sql_update = "UPDATE member SET 
-                    nama_member = '$nama_member', 
-                    no_telp = '$no_telp', 
-                    poin = $poin, 
-                    status = '$status'
-                    WHERE id_member = $id_member";
-            }
+            $sql_update = "UPDATE member SET 
+                nama_member = '$nama_member', 
+                no_telp = '$no_telp', 
+                status = '$status'" .
+                ($status === 'aktif' ? ", tanggal_aktif = NOW()" : "") . 
+                " WHERE id_member = $id_member";
             mysqli_query($conn, $sql_update);
         } else {
             $sql_insert = "INSERT INTO member (nama_member, no_telp, poin, status, tanggal_aktif) 
-                VALUES ('$nama_member', '$no_telp', $poin, '$status', NOW())";
+                VALUES ('$nama_member', '$no_telp', 0, '$status', NOW())";
             mysqli_query($conn, $sql_insert);
         }
 
@@ -331,6 +325,12 @@ if (count($expired_members) > 0) {
     if (isset($_GET['hapus'])) {
         $hapus_id = intval($_GET['hapus']);
         if ($hapus_id > 0) {
+            $cek = mysqli_query($conn, "SELECT status FROM member WHERE id_member = $hapus_id");
+            $row = mysqli_fetch_assoc($cek);
+            if ($row && $row['status'] === 'aktif') {
+                echo "<script>alert('Tidak bisa menghapus member yang sedang aktif!'); window.location='member.php';</script>";
+                exit;
+            }
             mysqli_query($conn, "DELETE FROM member WHERE id_member = $hapus_id");
             echo "<script>window.location='member.php';</script>";
             exit;
@@ -342,9 +342,8 @@ if (count($expired_members) > 0) {
 
 <?php if (count($expired_members) > 0): ?>
 <script>
-    // Buat pesan alert dengan nama member yang expired
     let expiredNames = <?= json_encode(array_map(fn($m) => $m['nama_member'], $expired_members)); ?>;
-    alert("Peringatan! Member berikut sudah tidak aktif karena masa aktif 1 menit telah habis:\n- " + expiredNames.join("\n- "));
+    alert("Peringatan! Member berikut sudah tidak aktif karena tidak transaksi selama 1 menit:\n- " + expiredNames.join("\n- "));
 </script>
 <?php endif; ?>
 

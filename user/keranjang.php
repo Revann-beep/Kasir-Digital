@@ -231,6 +231,8 @@ if (!empty($_SESSION['keranjang'])) {
     <?php endif; ?>
 
     <form method="post" class="member-form" autocomplete="off">
+        <a href="../Scanner/scan.php" style="display: inline-block; background-color: #666; color: white; padding: 9px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">← Kembali ke Scan</a>
+
         <input type="text" name="no_telp" placeholder="Masukkan No. Telepon Member" value="<?= htmlspecialchars($member['no_telp'] ?? '') ?>" required>
         <button type="submit">Cari Member</button>
         <?php if ($fid_member): ?>

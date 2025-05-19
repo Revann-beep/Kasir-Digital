@@ -1,12 +1,13 @@
 <?php
 include 'conection.php';
+session_start();
 
 if (!isset($_GET['id'])) {
     header("Location: admin.php");
     exit();
 }
 
-$id = $_GET['id'];
+$id = (int) $_GET['id'];
 $result = $conn->query("SELECT * FROM admin WHERE id = $id");
 
 if ($result->num_rows == 0) {
@@ -15,32 +16,62 @@ if ($result->num_rows == 0) {
 }
 
 $admin = $result->fetch_assoc();
+$errors = [];
+
+$current_user_id = $_SESSION['admin_id'] ?? null; // ID admin yang sedang login
+$is_self = ($id == $current_user_id);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $username = $_POST['username'];
+    $username = trim($_POST['username']);
+    $email = $is_self ? trim($_POST['email']) : $admin['email']; // hanya edit sendiri yang bisa ubah email
 
-    // Cek apakah upload gambar baru
-    if ($_FILES['gambar']['name']) {
-        $namaFile = time() . '_' . $_FILES['gambar']['name'];
-        $target_dir = "../assets/";
-        move_uploaded_file($_FILES["gambar"]["tmp_name"], $target_dir . $namaFile);
-        $gambar = $namaFile;
-    } else {
-        $gambar = $admin['gambar']; // Tetap pakai gambar lama
+    // Validasi duplikat email jika ubah email
+    if ($is_self && $email !== $admin['email']) {
+        $email_escaped = mysqli_real_escape_string($conn, $email);
+        $check = $conn->query("SELECT id FROM admin WHERE email = '$email_escaped' AND id != $id");
+        if ($check->num_rows > 0) {
+            $errors[] = "Email sudah digunakan admin lain.";
+        }
     }
 
-    $sql = "UPDATE admin SET email='$email', username='$username', gambar='$gambar' WHERE id=$id";
+    // Validasi gambar jika diunggah
+    if (!empty($_FILES['gambar']['name'])) {
+        $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
+        $ext = strtolower(pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION));
+        $file_size = $_FILES['gambar']['size'];
 
-    if ($conn->query($sql) === TRUE) {
-        header("Location: ../admin/admin.php");
-        exit();
+        if (!in_array($ext, $allowed_ext)) {
+            $errors[] = "Ekstensi gambar tidak valid.";
+        } elseif ($file_size > 2 * 1024 * 1024) {
+            $errors[] = "Ukuran gambar maksimal 2MB.";
+        } else {
+            $namaFile = 'admin_' . time() . '.' . $ext;
+            $target_dir = "../assets/";
+            move_uploaded_file($_FILES['gambar']['tmp_name'], $target_dir . $namaFile);
+        }
     } else {
-        echo "Error updating record: " . $conn->error;
+        $namaFile = $admin['gambar']; // tetap pakai gambar lama
+    }
+
+    if (empty($errors)) {
+        $email_escaped = mysqli_real_escape_string($conn, $email);
+        $username_escaped = mysqli_real_escape_string($conn, $username);
+        $gambar_escaped = mysqli_real_escape_string($conn, $namaFile);
+
+        $sql = "UPDATE admin SET 
+                    email = '$email_escaped',
+                    username = '$username_escaped',
+                    gambar = '$gambar_escaped'
+                WHERE id = $id";
+
+        if ($conn->query($sql) === TRUE) {
+            header("Location: ../admin/admin.php");
+            exit();
+        } else {
+            $errors[] = "Gagal memperbarui data: " . $conn->error;
+        }
     }
 }
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -134,6 +165,14 @@ $conn->close();
             border: 2px solid #ccc;
         }
 
+        .error {
+            background: #ffe6e6;
+            color: #c0392b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
         @media (max-width: 480px) {
             .form-container {
                 padding: 20px;
@@ -145,9 +184,25 @@ $conn->close();
 
 <div class="form-container">
     <h2>Edit Admin</h2>
+
+    <?php if (!empty($errors)): ?>
+        <div class="error">
+            <ul>
+                <?php foreach ($errors as $err): ?>
+                    <li><?= htmlspecialchars($err) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
     <form action="" method="POST" enctype="multipart/form-data">
-        <label>Email:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
+        <?php if ($is_self): ?>
+            <label>Email:</label>
+            <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" required>
+        <?php else: ?>
+            <label>Email:</label>
+            <input type="email" value="<?= htmlspecialchars($admin['email']) ?>" disabled>
+        <?php endif; ?>
 
         <label>Username:</label>
         <input type="text" name="username" value="<?= htmlspecialchars($admin['username']) ?>" required>
