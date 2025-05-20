@@ -1,13 +1,18 @@
 <?php
 include '../service/conection.php';
 
-// Ambil data transaksi per minggu
+// Tangkap filter tanggal dari form
+$start = $_GET['start_date'] ?? date('Y-m-d', strtotime('-1 week'));
+$end   = $_GET['end_date'] ?? date('Y-m-d');
+
+// Query data transaksi mingguan berdasarkan tanggal yang dipilih
 $query = mysqli_query($conn, "
     SELECT 
         WEEK(tgl_pembelian, 1) AS minggu,
         COUNT(*) AS total_transaksi,
         SUM(total_harga) AS total_penjualan
     FROM transaksi
+    WHERE DATE(tgl_pembelian) BETWEEN '$start' AND '$end'
     GROUP BY minggu
     ORDER BY minggu ASC
 ");
@@ -54,10 +59,11 @@ $query = mysqli_query($conn, "
         }
         .header {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
-        .header input {
+        .header input[type="text"] {
             padding: 5px 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -84,7 +90,7 @@ $query = mysqli_query($conn, "
             box-shadow: 0 3px 6px rgba(184, 134, 11, 0.5);
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
             user-select: none;
-            margin-bottom: 10px;
+            margin: 10px 0;
         }
         .download-btn:hover {
             background-color: #9a6f02;
@@ -94,9 +100,24 @@ $query = mysqli_query($conn, "
             background-color: #7c5700;
             box-shadow: inset 0 3px 6px rgba(124, 87, 0, 0.8);
         }
-        .download-btn .icon {
-            font-size: 20px;
-            line-height: 1;
+        .filter-form {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-form input[type="date"] {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .filter-form button {
+            padding: 5px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
         table {
             width: 100%;
@@ -131,9 +152,20 @@ $query = mysqli_query($conn, "
         </div>
         <div class="report-container">
             <h3>Halaman Laporan Mingguan</h3>
+
+            <!-- Filter kalender -->
+            <form method="get" class="filter-form">
+                <label>Dari:</label>
+                <input type="date" name="start_date" value="<?= $start ?>" required>
+                <label>Sampai:</label>
+                <input type="date" name="end_date" value="<?= $end ?>" required>
+                <button type="submit">Terapkan</button>
+            </form>
+
             <button class="download-btn" onclick="window.print()">
                 <span class="icon">🖨️</span> Unduh Laporan
             </button>
+
             <table>
                 <thead>
                     <tr>

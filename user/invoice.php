@@ -9,7 +9,7 @@ $id_transaksi = (int) $_GET['id_transaksi'];
 
 // Ambil data transaksi
 $query_transaksi = mysqli_query($conn, "
-  SELECT t.*, a.username AS admin_nama, m.nama_member, m.poin 
+  SELECT t.*, a.username AS admin_nama, m.nama_member, m.poin, m.no_telp 
   FROM transaksi t 
   JOIN admin a ON t.fid_admin = a.id 
   LEFT JOIN member m ON t.fid_member = m.id_member 
@@ -31,11 +31,26 @@ $query_total_asli = mysqli_query($conn, "
 ");
 $data_total = mysqli_fetch_assoc($query_total_asli);
 $total_asli = $data_total['total_asli'];
-$diskon = $transaksi['diskon'] ?? ($total_asli - $transaksi['total_harga']); // fallback kalau diskon null
+$diskon = $transaksi['diskon'] ?? ($total_asli - $transaksi['total_harga']);
 
-// Hitung poin
 $poin_ditambahkan = floor($transaksi['total_harga'] / 1000);
 $total_poin_sekarang = isset($transaksi['poin']) ? $transaksi['poin'] : 0;
+
+// Siapkan data WA jika member
+$link_wa = '';
+if ($transaksi['fid_member']) {
+  $nama = urlencode($transaksi['nama_member']);
+  $no_telp = preg_replace('/[^0-9]/', '', $transaksi['no_telp']);
+  if (substr($no_telp, 0, 1) == '0') {
+    $no_wa = '62' . substr($no_telp, 1);
+  } else {
+    $no_wa = $no_telp;
+  }
+  $total = number_format($transaksi['total_harga'], 0, ',', '.');
+  $poin = $poin_ditambahkan;
+  $pesan = urlencode("Hai $nama, terima kasih sudah berbelanja. Total: Rp$total. Poin ditambahkan: $poin.");
+  $link_wa = "https://wa.me/$no_wa?text=$pesan";
+}
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +59,8 @@ $total_poin_sekarang = isset($transaksi['poin']) ? $transaksi['poin'] : 0;
   <meta charset="UTF-8" />
   <title>Invoice Transaksi</title>
   <style>
-    /* Reset & base */
+    /* CSS dipersingkat di sini agar fokus ke fungsi. Gunakan dari versi sebelumnya. */
+       /* Reset & base */
     * {
       box-sizing: border-box;
     }
@@ -264,6 +280,10 @@ $total_poin_sekarang = isset($transaksi['poin']) ? $transaksi['poin'] : 0;
       <span><?= htmlspecialchars($transaksi['admin_nama']) ?></span>
       <strong>Member</strong>
       <span><?= htmlspecialchars($transaksi['nama_member'] ?? '-') ?></span>
+      <?php if ($transaksi['no_telp']) : ?>
+        <strong>No. Telepon</strong>
+        <span><?= htmlspecialchars($transaksi['no_telp']) ?></span>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -330,7 +350,20 @@ $total_poin_sekarang = isset($transaksi['poin']) ? $transaksi['poin'] : 0;
   <div class="btn-group">
     <button onclick="window.print()">🖨️ Cetak Invoice</button>
     <a href="../Scanner/scan.php" class="back-button">🔙 Kembali Belanja</a>
+    <?php if ($transaksi['fid_member']) : ?>
+      <button onclick="kirimWA()">📩 Kirim WhatsApp</button>
+    <?php endif; ?>
   </div>
+
+  <?php if ($transaksi['fid_member']) : ?>
+    <script>
+      function kirimWA() {
+        if (confirm("Kirim pesan WhatsApp ke member?")) {
+          window.open("<?= $link_wa ?>", "_blank");
+        }
+      }
+    </script>
+  <?php endif; ?>
 
 </body>
 </html>

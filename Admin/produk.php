@@ -297,22 +297,26 @@ $result = mysqli_query($conn, $query);
     <a href="../Scanner/Scan.php" class="add-btn green" style="margin-bottom: 20px;">🛒 Transaksi Sekarang</a>
 
     <div class="top-bar">
-        <form method="GET" class="search-form">
-            <input type="text" name="search" placeholder="Cari produk atau barcode..." value="<?= htmlspecialchars($keyword) ?>">
-            <select name="kategori">
-                <option value="">Semua Kategori</option>
-                <?php
-                mysqli_data_seek($kategoriResult, 0);
-                while ($kat = mysqli_fetch_assoc($kategoriResult)) { ?>
-                    <option value="<?= $kat['id_kategori'] ?>" <?= $filter_kategori == $kat['id_kategori'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($kat['nama_kategori']) ?>
-                    </option>
-                <?php } ?>
-            </select>
-            <button type="submit">🔍</button>
-        </form>
+    <form method="GET" class="search-form">
+        <input type="text" name="search" placeholder="Cari produk atau barcode..." value="<?= htmlspecialchars($keyword) ?>">
+        <select name="kategori">
+            <option value="">Semua Kategori</option>
+            <?php
+            mysqli_data_seek($kategoriResult, 0);
+            while ($kat = mysqli_fetch_assoc($kategoriResult)) { ?>
+                <option value="<?= $kat['id_kategori'] ?>" <?= $filter_kategori == $kat['id_kategori'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($kat['nama_kategori']) ?>
+                </option>
+            <?php } ?>
+        </select>
+        <button type="submit">🔍</button>
+    </form>
+    <div style="display: flex; gap: 10px;">
+        <a href="keranjang.php" class="add-btn green">🛒 Keranjang</a>
         <a href="../service/add-produk.php" class="add-btn">+ Add Product</a>
     </div>
+</div>
+
 
     <table>
         <thead>

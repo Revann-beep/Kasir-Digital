@@ -4,7 +4,7 @@ require_once '../service/conection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password_input = $_POST['password']; // tidak perlu di-escape karena tidak disimpan ke DB langsung
+    $password_input = $_POST['password'];
 
     $query = "SELECT * FROM admin WHERE username='$username'";
     $result = mysqli_query($conn, $query);
@@ -14,15 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $hashed_password = $row['password'];
 
         if (password_verify($password_input, $hashed_password)) {
-            // Simpan data ke session
             $_SESSION['admin_id'] = $row['id'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['gambar'] = $row['gambar'];
+            $_SESSION['welcome_message'] = "Selamat datang admin " . $row['username'];
 
-            // Set semua admin jadi Nonaktif
             $conn->query("UPDATE admin SET status = 'Nonaktif'");
-
-            // Set admin yang login jadi Aktif
             $adminId = $row['id'];
             $conn->query("UPDATE admin SET status = 'Aktif' WHERE id = $adminId");
 

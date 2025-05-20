@@ -5,20 +5,26 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
-include '../service/conection.php';
+// Alert selamat datang (sekali setelah login)
+if (isset($_SESSION['welcome_message'])) {
+    echo "<script>alert('" . $_SESSION['welcome_message'] . "');</script>";
+    unset($_SESSION['welcome_message']);
+}
+
+require_once '../service/conection.php';
 
 $username = $_SESSION['username'];
 
-// Ambil gambar user jika belum disimpan di session
+// Ambil gambar jika belum ada di session
 if (!isset($_SESSION['gambar'])) {
     $queryGambar = mysqli_query($conn, "SELECT gambar FROM admin WHERE username = '$username'");
     $resultGambar = mysqli_fetch_assoc($queryGambar);
-    $_SESSION['gambar'] = $resultGambar['gambar'] ?? 'default.jpg'; // fallback default
+    $_SESSION['gambar'] = $resultGambar['gambar'] ?? 'default.jpg';
 }
 
+// Filter data
 $filter = $_GET['filter'] ?? 'harian';
 
-// Query sesuai filter
 if ($filter === 'harian') {
     $query = mysqli_query($conn, "
         SELECT DATE(t.tgl_pembelian) AS label, SUM(d.jumlah) AS total_item
@@ -37,7 +43,7 @@ if ($filter === 'harian') {
         GROUP BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
         ORDER BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
     ");
-} else { // tahunan
+} else {
     $query = mysqli_query($conn, "
         SELECT YEAR(t.tgl_pembelian) AS label, SUM(d.jumlah) AS total_item
         FROM transaksi t
@@ -47,6 +53,7 @@ if ($filter === 'harian') {
     ");
 }
 
+// Ambil data chart
 $labels = [];
 $data = [];
 while ($row = mysqli_fetch_assoc($query)) {
