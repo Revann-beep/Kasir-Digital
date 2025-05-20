@@ -1,23 +1,40 @@
 <?php
 include '../service/conection.php';
 
-$id = $_GET['id'];
-$data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM produk WHERE id_produk=$id"));
+$id = (int) $_GET['id'];
+$data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM produk WHERE id_produk = $id"));
+
+if (!$data) {
+    echo "<script>alert('❌ Data produk tidak ditemukan!'); window.location.href='../admin/produk.php';</script>";
+    exit;
+}
 
 if (isset($_POST['update'])) {
-    $nama = htmlspecialchars($_POST['nama']);
-    $barcode = htmlspecialchars($_POST['barcode']);
-    $stok = $_POST['stok'];
-    $modal = $_POST['modal'];
-    $harga = $_POST['harga'];
-    $kategori = $_POST['kategori'];
-    $deskripsi = htmlspecialchars($_POST['deskripsi']);
+    $nama = mysqli_real_escape_string($conn, htmlspecialchars($_POST['nama']));
+    $barcode = mysqli_real_escape_string($conn, htmlspecialchars($_POST['barcode']));
+    $stok = (int) $_POST['stok'];
+    $modal = (int) $_POST['modal'];
+    $harga = (int) $_POST['harga'];
+    $kategori = (int) $_POST['kategori'];
+    $deskripsi = mysqli_real_escape_string($conn, htmlspecialchars($_POST['deskripsi']));
     $keuntungan = $harga - $modal;
 
+    // Cek duplikat nama (selain produk yang sedang diedit)
+    $cek_nama = mysqli_query($conn, "SELECT * FROM produk WHERE nama_produk = '$nama' AND id_produk != $id");
+    if (mysqli_num_rows($cek_nama) > 0) {
+        echo "<script>alert('❌ Nama produk sudah digunakan oleh produk lain!'); window.history.back();</script>";
+        exit;
+    }
+
+    // Jika user upload gambar baru
     if ($_FILES['gambar']['name']) {
         $gambar = $_FILES['gambar']['name'];
         $tmp = $_FILES['gambar']['tmp_name'];
-        move_uploaded_file($tmp, "../assets/" . $gambar);
+        $upload_path = "../assets/" . basename($gambar);
+        if (!move_uploaded_file($tmp, $upload_path)) {
+            echo "<script>alert('❌ Gagal upload gambar baru!'); window.history.back();</script>";
+            exit;
+        }
 
         $query = "UPDATE produk SET 
             nama_produk='$nama',
@@ -31,6 +48,7 @@ if (isset($_POST['update'])) {
             gambar='$gambar' 
             WHERE id_produk=$id";
     } else {
+        // Tanpa ganti gambar
         $query = "UPDATE produk SET 
             nama_produk='$nama',
             barcode='$barcode',
@@ -43,10 +61,15 @@ if (isset($_POST['update'])) {
             WHERE id_produk=$id";
     }
 
-    mysqli_query($conn, $query);
-    header("Location: ../admin/produk.php");
+    if (mysqli_query($conn, $query)) {
+        header("Location: ../admin/produk.php");
+        exit;
+    } else {
+        echo "<script>alert('❌ Gagal mengupdate produk!'); window.history.back();</script>";
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">

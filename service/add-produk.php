@@ -2,33 +2,57 @@
 include '../service/conection.php';
 
 if (isset($_POST['submit'])) {
-    $nama = htmlspecialchars($_POST['nama']);
-    $stok = $_POST['stok'];
-    $modal = $_POST['modal'];
-    $harga = $_POST['harga'];
-    $barcode = htmlspecialchars($_POST['barcode']);
-    $kategori_nama = $_POST['kategori'];
-    $deskripsi = htmlspecialchars($_POST['deskripsi']);
+    // Ambil dan sanitasi input
+    $nama = mysqli_real_escape_string($conn, htmlspecialchars($_POST['nama']));
+    $stok = (int) $_POST['stok'];
+    $modal = (int) $_POST['modal'];
+    $harga = (int) $_POST['harga'];
+    $barcode = mysqli_real_escape_string($conn, htmlspecialchars($_POST['barcode']));
+    $kategori_nama = mysqli_real_escape_string($conn, $_POST['kategori']);
+    $deskripsi = mysqli_real_escape_string($conn, htmlspecialchars($_POST['deskripsi']));
     $keuntungan = $harga - $modal;
 
+    // Validasi nama produk unik
+    $cekNama = mysqli_query($conn, "SELECT * FROM produk WHERE nama_produk = '$nama'");
+    if (mysqli_num_rows($cekNama) > 0) {
+        echo "<script>alert('❌ Nama produk sudah digunakan!'); window.history.back();</script>";
+        exit;
+    }
+
+    // Ambil ID kategori
     $kategori_sql = "SELECT id_kategori FROM kategori WHERE nama_kategori = '$kategori_nama'";
     $kategori_result = mysqli_query($conn, $kategori_sql);
+    if (mysqli_num_rows($kategori_result) == 0) {
+        echo "<script>alert('❌ Kategori tidak ditemukan!'); window.history.back();</script>";
+        exit;
+    }
     $kategori_data = mysqli_fetch_assoc($kategori_result);
     $kategori = $kategori_data['id_kategori'];
 
+    // Proses upload gambar
     $gambar = $_FILES['gambar']['name'];
     $tmp = $_FILES['gambar']['tmp_name'];
-    $upload_path = "../assets/" . $gambar;
-    move_uploaded_file($tmp, $upload_path);
+    $upload_path = "../assets/" . basename($gambar);
+    if (!move_uploaded_file($tmp, $upload_path)) {
+        echo "<script>alert('❌ Gagal upload gambar!'); window.history.back();</script>";
+        exit;
+    }
 
+    // Insert produk
     $sql = "INSERT INTO produk 
         (nama_produk, barcode, stok, modal, harga_jual, keuntungan, fid_kategori, gambar, deskripsi) 
         VALUES 
         ('$nama', '$barcode', '$stok', '$modal', '$harga', '$keuntungan', '$kategori', '$gambar', '$deskripsi')";
-    mysqli_query($conn, $sql);
-    header("Location: ../admin/produk.php");
+    
+    if (mysqli_query($conn, $sql)) {
+        header("Location: ../admin/produk.php");
+        exit;
+    } else {
+        echo "<script>alert('❌ Gagal menyimpan produk!'); window.history.back();</script>";
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">

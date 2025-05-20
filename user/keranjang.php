@@ -2,6 +2,20 @@
 session_start();
 include '../service/conection.php';
 
+// Set waktu expired keranjang (1 jam)
+$waktu_expired = 60 * 60;
+if (isset($_SESSION['keranjang'])) {
+    if (!isset($_SESSION['keranjang_waktu'])) {
+        $_SESSION['keranjang_waktu'] = time();
+    } elseif (time() - $_SESSION['keranjang_waktu'] > $waktu_expired) {
+        unset($_SESSION['keranjang']);
+        unset($_SESSION['keranjang_waktu']);
+        unset($_SESSION['fid_member']);
+        echo "<script>alert('Waktu checkout habis (1 jam), keranjang dihapus.'); location.reload();</script>";
+        exit;
+    }
+}
+
 // Reset member jika tombol reset ditekan
 if (isset($_POST['reset_member'])) {
     unset($_SESSION['fid_member']);
@@ -9,26 +23,11 @@ if (isset($_POST['reset_member'])) {
     exit;
 }
 
-// Set waktu expired keranjang (10 menit)
-$waktu_expired = 10 * 60;
-if (isset($_SESSION['keranjang'])) {
-    if (!isset($_SESSION['keranjang_waktu'])) {
-        $_SESSION['keranjang_waktu'] = time();
-    } else {
-        if (time() - $_SESSION['keranjang_waktu'] > $waktu_expired) {
-            unset($_SESSION['keranjang']);
-            unset($_SESSION['keranjang_waktu']);
-            unset($_SESSION['fid_member']);
-            echo "<script>alert('Waktu checkout habis, keranjang dihapus.'); location.reload();</script>";
-            exit;
-        }
-    }
-}
-
 $fid_member = $_SESSION['fid_member'] ?? null;
 $member = null;
-$poin_diskon = 0;
 $total = 0;
+$poin_diskon = 0;
+$error_msg = null;
 
 // Cari member berdasarkan no_telp
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['no_telp']) && !isset($_POST['reset_member'])) {
@@ -40,32 +39,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['no_telp']) && !isset(
         header("Location: keranjang.php");
         exit;
     } else {
-        $error_msg = "Member dengan nomor tersebut tidak ditemukan.";
+        $error_msg = "Member tidak ditemukan atau tidak aktif.";
     }
 }
 
-// Hitung total dan diskon poin jika ada keranjang
-if (!empty($_SESSION['keranjang'])) {
-    foreach ($_SESSION['keranjang'] as $item) {
-        $subtotal = $item['harga'] * $item['qty'];
-        $total += $subtotal;
-    }
-    if ($fid_member) {
-        $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member=$fid_member");
-        $member = mysqli_fetch_assoc($q);
-        $poin_diskon = min($member['poin'], floor($total / 100)) * 100;
-    }
+if ($fid_member) {
+    $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member=$fid_member");
+    $member = mysqli_fetch_assoc($q);
 }
+
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keranjang Belanja</title>
 <style>
-    body {
+    /* ...style CSS seperti sebelumnya (boleh pakai dari versi kamu)... */
+    
+        body {
         font-family: Arial, sans-serif;
         background-color: #f7f9fc;
         margin: 0; padding: 20px;
@@ -218,22 +210,48 @@ if (!empty($_SESSION['keranjang'])) {
         margin-right: 20px;
         font-weight: normal;
         cursor: pointer;
+    
+    }
+
+    input[type="checkbox"] {
+        transform: scale(1.2);
+        cursor: pointer;
+    }
+    .total-box {
+        font-size: 18px;
+        text-align: right;
+        margin-top: 10px;
     }
 </style>
-</head>
-<body>
+<script>
+function hitungTotal() {
+    let checkboxes = document.querySelectorAll('input[name="produk_dipilih[]"]:checked');
+    let total = 0;
+    checkboxes.forEach(cb => {
+        total += parseInt(cb.dataset.subtotal);
+    });
 
+    const diskon = <?= $member ? min($member['poin'], floor(999999999 / 100)) * 100 : 0 ?>;
+    const diskonAktif = Math.min(diskon, Math.floor(total / 100) * 100);
+
+    document.getElementById('total-harga').textContent = 'Rp ' + total.toLocaleString();
+    document.getElementById('diskon-poin').textContent = 'Rp ' + diskonAktif.toLocaleString();
+    document.getElementById('total-bayar').textContent = 'Rp ' + (total - diskonAktif).toLocaleString();
+
+    document.getElementById('total-section').style.display = checkboxes.length ? 'block' : 'none';
+}
+</script>
+</head>
+<body onload="hitungTotal()">
 <div class="container">
     <h1>Keranjang Belanja</h1>
 
-    <?php if (!empty($error_msg)): ?>
-        <p class="error-msg"><?= htmlspecialchars($error_msg) ?></p>
+    <?php if ($error_msg): ?>
+        <p class="error-msg"><?= $error_msg ?></p>
     <?php endif; ?>
 
-    <form method="post" class="member-form" autocomplete="off">
-        <a href="../Scanner/scan.php" style="display: inline-block; background-color: #666; color: white; padding: 9px 18px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px;">← Kembali ke Scan</a>
-
-        <input type="text" name="no_telp" placeholder="Masukkan No. Telepon Member" value="<?= htmlspecialchars($member['no_telp'] ?? '') ?>" required>
+    <form method="post" class="member-form">
+        <input type="text" name="no_telp" placeholder="Masukkan No. Telepon Member" required value="<?= htmlspecialchars($member['no_telp'] ?? '') ?>">
         <button type="submit">Cari Member</button>
         <?php if ($fid_member): ?>
             <button type="submit" name="reset_member" class="reset-member">Reset Member</button>
@@ -245,43 +263,45 @@ if (!empty($_SESSION['keranjang'])) {
     <?php endif; ?>
 
     <?php if (!empty($_SESSION['keranjang'])): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Produk</th>
-                <th>Harga (Rp)</th>
-                <th>Qty</th>
-                <th>Subtotal (Rp)</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($_SESSION['keranjang'] as $item): 
-            $subtotal = $item['harga'] * $item['qty']; ?>
-            <tr>
-                <td><?= htmlspecialchars($item['nama']) ?></td>
-                <td><?= number_format($item['harga'],0,',','.') ?></td>
-                <td>
-                    <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=kurang" class="qty-btn" title="Kurangi jumlah">−</a>
-                    <?= $item['qty'] ?>
-                    <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=lebih" class="qty-btn" title="Tambah jumlah">+</a>
-                </td>
-                <td><?= number_format($subtotal,0,',','.') ?></td>
-                <td><a href="../service/hapus-keranjang.php?id=<?= $item['id_produk'] ?>" class="hapus-btn" onclick="return confirm('Yakin hapus produk ini?');">Hapus</a></td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+    <form method="post" action="../user/checkout.php" onsubmit="return confirm('Yakin melakukan checkout?')">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Produk</th>
+                    <th>Harga (Rp)</th>
+                    <th>Qty</th>
+                    <th>Subtotal (Rp)</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($_SESSION['keranjang'] as $item): 
+                $subtotal = $item['harga'] * $item['qty']; ?>
+                <tr>
+                    <td><input type="checkbox" name="produk_dipilih[]" value="<?= $item['id_produk'] ?>" data-subtotal="<?= $subtotal ?>" onchange="hitungTotal()" /></td>
+                    <td><?= htmlspecialchars($item['nama']) ?></td>
+                    <td><?= number_format($item['harga']) ?></td>
+                    <td>
+                        <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=kurang" class="qty-btn">−</a>
+                        <?= $item['qty'] ?>
+                        <a href="../service/update-qty.php?id=<?= $item['id_produk'] ?>&action=lebih" class="qty-btn">+</a>
+                    </td>
+                    <td><?= number_format($subtotal) ?></td>
+                    <td><a href="../service/hapus-keranjang.php?id=<?= $item['id_produk'] ?>" class="hapus-btn">Hapus</a></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
 
-    <div class="total">Total: Rp <?= number_format($total,0,',','.') ?></div>
-    <?php if ($poin_diskon > 0): ?>
-    <div class="discount">Diskon Poin: Rp <?= number_format($poin_diskon,0,',','.') ?></div>
-    <div class="final-total"><strong>Total Bayar: Rp <?= number_format($total - $poin_diskon,0,',','.') ?></strong></div>
-    <?php endif; ?>
+        <div id="total-section" style="display: none;">
+            <div class="total-box">Total: <span id="total-harga">Rp 0</span></div>
+            <div class="total-box">Diskon Poin: <span id="diskon-poin">Rp 0</span></div>
+            <div class="total-box"><strong>Total Bayar: <span id="total-bayar">Rp 0</span></strong></div>
+        </div>
 
-    <form method="post" action="../user/checkout.php">
         <label for="uang_dibayar">Uang Dibayar (Rp):</label>
-        <input type="number" id="uang_dibayar" name="uang_dibayar" required min="0" placeholder="Masukkan uang bayar">
+        <input type="number" name="uang_dibayar" min="0" required>
 
         <div class="payment-methods">
             <label><input type="radio" name="metode_pembayaran" value="tunai" checked> Tunai</label>
@@ -293,14 +313,13 @@ if (!empty($_SESSION['keranjang'])) {
         <button type="submit" class="checkout-btn">Checkout</button>
     </form>
 
-    <form method="post" action="../service/hapus-keranjang.php" onsubmit="return confirm('Yakin kosongkan keranjang?');">
+    <form method="post" action="../service/hapus-keranjang.php" onsubmit="return confirm('Kosongkan keranjang?')">
         <button type="submit" class="empty-btn">Kosongkan Keranjang</button>
     </form>
 
     <?php else: ?>
-        <p style="text-align:center; font-style: italic;">Keranjang belanja kosong.</p>
+        <p style="text-align:center; font-style: italic;">Keranjang kosong.</p>
     <?php endif; ?>
 </div>
-
 </body>
 </html>

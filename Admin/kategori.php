@@ -3,15 +3,32 @@ $conn = new mysqli("localhost", "root", "", "kasir");
 
 // Tambah / Edit Kategori
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nama = $_POST['nama_kategori'];
+    $nama = trim($_POST['nama_kategori']);
+    $nama = $conn->real_escape_string($nama);
+
     if (isset($_POST['id_kategori'])) {
         // Edit
-        $id = $_POST['id_kategori'];
+        $id = intval($_POST['id_kategori']);
+        $cek = $conn->query("SELECT COUNT(*) AS total FROM kategori WHERE nama_kategori = '$nama' AND id_kategori != $id");
+        $data = $cek->fetch_assoc();
+        if ($data['total'] > 0) {
+            echo "<script>alert('Nama kategori sudah ada!'); window.location='kategori.php';</script>";
+            exit();
+        }
+
         $conn->query("UPDATE kategori SET nama_kategori='$nama' WHERE id_kategori=$id");
     } else {
         // Tambah
-        $conn->query("INSERT INTO kategori (nama_kategori) VALUES ('$nama')");
+        $cek = $conn->query("SELECT COUNT(*) AS total FROM kategori WHERE nama_kategori = '$nama'");
+        $data = $cek->fetch_assoc();
+        if ($data['total'] > 0) {
+            echo "<script>alert('Nama kategori sudah ada!'); window.location='kategori.php';</script>";
+            exit();
+        }
+
+        $conn->query("INSERT INTO kategori (nama_kategori, tgl_input) VALUES ('$nama', NOW())");
     }
+
     header("Location: kategori.php");
     exit();
 }
@@ -36,11 +53,12 @@ if (isset($_GET['delete'])) {
 // Ambil data untuk form edit
 $edit = null;
 if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
+    $id = intval($_GET['edit']);
     $res = $conn->query("SELECT * FROM kategori WHERE id_kategori=$id");
     $edit = $res->fetch_assoc();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
