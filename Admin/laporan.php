@@ -2,19 +2,19 @@
 include '../service/conection.php';
 
 // Tangkap filter tanggal dari form
-$start = $_GET['start_date'] ?? date('Y-m-d', strtotime('-1 week'));
+$start = $_GET['start_date'] ?? date('Y-m-01', strtotime('-2 month')); // default: 2 bulan lalu
 $end   = $_GET['end_date'] ?? date('Y-m-d');
 
-// Query data transaksi mingguan berdasarkan tanggal yang dipilih
+// Query data transaksi per bulan
 $query = mysqli_query($conn, "
     SELECT 
-        WEEK(tgl_pembelian, 1) AS minggu,
+        DATE_FORMAT(tgl_pembelian, '%Y-%m') AS bulan,
         COUNT(*) AS total_transaksi,
         SUM(total_harga) AS total_penjualan
     FROM transaksi
     WHERE DATE(tgl_pembelian) BETWEEN '$start' AND '$end'
-    GROUP BY minggu
-    ORDER BY minggu ASC
+    GROUP BY bulan
+    ORDER BY bulan ASC
 ");
 ?>
 
@@ -23,7 +23,7 @@ $query = mysqli_query($conn, "
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Halaman Laporan</title>
+    <title>Laporan Bulanan</title>
     <style>
         body {
             display: flex;
@@ -32,7 +32,7 @@ $query = mysqli_query($conn, "
         }
         .sidebar {
             width: 200px;
-            background-color:  #b8860b;
+            background-color: #b8860b;
             padding: 20px;
             height: 100vh;
             color: white;
@@ -134,6 +134,28 @@ $query = mysqli_query($conn, "
         th {
             background-color: #ffcc00;
         }
+        @media print {
+            body {
+                display: block;
+            }
+            .sidebar {
+                display: none !important;
+            }
+            .header, .filter-form, .download-btn {
+                display: none !important;
+            }
+            .main-content {
+                padding: 0;
+                background-color: white;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -147,11 +169,9 @@ $query = mysqli_query($conn, "
         </ul>
     </div>
     <div class="main-content">
-        <div class="header">
-            <input type="text" placeholder="Search" />
-        </div>
+        ch
         <div class="report-container">
-            <h3>Halaman Laporan Mingguan</h3>
+            <h3>Laporan Transaksi Bulanan</h3>
 
             <!-- Filter kalender -->
             <form method="get" class="filter-form">
@@ -170,7 +190,7 @@ $query = mysqli_query($conn, "
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Minggu ke-</th>
+                        <th>Bulan</th>
                         <th>Total Penjualan</th>
                         <th>Total Transaksi</th>
                     </tr>
@@ -179,9 +199,21 @@ $query = mysqli_query($conn, "
                     <?php 
                     $no = 1;
                     while($row = mysqli_fetch_assoc($query)) {
+                        $bulanDate = strtotime($row['bulan'] . '-01');
+                        $bulanAwal = date('Y-m-01', $bulanDate);
+                        $bulanAkhir = date('Y-m-t', $bulanDate);
+
+                        $rentangAwal = max($start, $bulanAwal);
+                        $rentangAkhir = min($end, $bulanAkhir);
+
+                        $rentangAwalFormatted = date('d-m-Y', strtotime($rentangAwal));
+                        $rentangAkhirFormatted = date('d-m-Y', strtotime($rentangAkhir));
+
+                        $bulanFormatted = date('F Y', $bulanDate) . " ({$rentangAwalFormatted} s.d. {$rentangAkhirFormatted})";
+
                         echo "<tr>
                                 <td>{$no}</td>
-                                <td>Minggu ke-{$row['minggu']}</td>
+                                <td>{$bulanFormatted}</td>
                                 <td>Rp" . number_format($row['total_penjualan'], 0, ',', '.') . "</td>
                                 <td>{$row['total_transaksi']}</td>
                               </tr>";

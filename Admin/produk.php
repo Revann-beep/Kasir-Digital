@@ -312,7 +312,7 @@ $result = mysqli_query($conn, $query);
         <button type="submit">🔍</button>
     </form>
     <div style="display: flex; gap: 10px;">
-        <a href="keranjang.php" class="add-btn green">🛒 Keranjang</a>
+        <a href="../user/keranjang.php" class="add-btn green">🛒 Keranjang</a>
         <a href="../service/add-produk.php" class="add-btn">+ Add Product</a>
     </div>
 </div>

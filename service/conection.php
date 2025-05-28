@@ -1,11 +1,8 @@
 <?php
-$server_name = 'localhost';
-$username = 'root';
-$password = '';
-$database = "kasir";//sesuaikan nama database
+date_default_timezone_set('Asia/Jakarta'); // Tambahkan ini paling atas
 
-$conn = mysqli_connect($server_name, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("gagal". $conn->connect_error);
+$conn = mysqli_connect("localhost", "root", "", "kasir");
+if (!$conn) {
+    die("Koneksi gagal: " . mysqli_connect_error());
 }
+?>

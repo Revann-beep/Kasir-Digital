@@ -25,8 +25,6 @@ if (isset($_POST['reset_member'])) {
 
 $fid_member = $_SESSION['fid_member'] ?? null;
 $member = null;
-$total = 0;
-$poin_diskon = 0;
 $error_msg = null;
 
 // Cari member berdasarkan no_telp
@@ -47,7 +45,6 @@ if ($fid_member) {
     $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member=$fid_member");
     $member = mysqli_fetch_assoc($q);
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -55,9 +52,7 @@ if ($fid_member) {
 <meta charset="UTF-8" />
 <title>Keranjang Belanja</title>
 <style>
-    /* ...style CSS seperti sebelumnya (boleh pakai dari versi kamu)... */
-    
-        body {
+ body {
         font-family: Arial, sans-serif;
         background-color: #f7f9fc;
         margin: 0; padding: 20px;
@@ -222,28 +217,63 @@ if ($fid_member) {
         text-align: right;
         margin-top: 10px;
     }
-</style>
-<script>
-function hitungTotal() {
-    let checkboxes = document.querySelectorAll('input[name="produk_dipilih[]"]:checked');
-    let total = 0;
-    checkboxes.forEach(cb => {
-        total += parseInt(cb.dataset.subtotal);
-    });
-
-    const diskon = <?= $member ? min($member['poin'], floor(999999999 / 100)) * 100 : 0 ?>;
-    const diskonAktif = Math.min(diskon, Math.floor(total / 100) * 100);
-
-    document.getElementById('total-harga').textContent = 'Rp ' + total.toLocaleString();
-    document.getElementById('diskon-poin').textContent = 'Rp ' + diskonAktif.toLocaleString();
-    document.getElementById('total-bayar').textContent = 'Rp ' + (total - diskonAktif).toLocaleString();
-
-    document.getElementById('total-section').style.display = checkboxes.length ? 'block' : 'none';
+    .top-left-action {
+    text-align: left;
+    margin: 10px 0 20px 0;
 }
+
+.back-btn {
+    display: inline-block;
+    background-color: #666;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.back-btn:hover {
+    background-color: #444;
+}
+</style>
+<!-- ... (kode sebelum ini tidak berubah) ... -->
+
+<script>
+    const poinMember = <?= $member ? (int)$member['poin'] : 0 ?>;
+
+    function hitungTotal() {
+        let checkboxes = document.querySelectorAll('input[name="produk_dipilih[]"]:checked');
+        let total = 0;
+        checkboxes.forEach(cb => {
+            total += parseInt(cb.dataset.subtotal);
+        });
+
+        let maksimalDiskon = poinMember * 1000;
+        if (maksimalDiskon > total) maksimalDiskon = total;
+
+        const totalBayar = total - maksimalDiskon;
+
+        document.getElementById('total-harga').textContent = 'Rp ' + total.toLocaleString();
+        document.getElementById('diskon-poin').textContent = 'Rp ' + maksimalDiskon.toLocaleString();
+        document.getElementById('total-bayar').textContent = 'Rp ' + totalBayar.toLocaleString();
+
+        // Isi input hidden
+        document.getElementById('input-total').value = total;
+        document.getElementById('input-diskon').value = maksimalDiskon;
+        document.getElementById('input-bayar').value = totalBayar;
+
+        document.getElementById('total-section').style.display = checkboxes.length ? 'block' : 'none';
+    }
 </script>
+
 </head>
 <body onload="hitungTotal()">
 <div class="container">
+    <div class="top-left-action">
+        <a href="../Scanner/scan.php" class="back-btn">← Kembali ke Scan</a>
+    </div>
+
     <h1>Keranjang Belanja</h1>
 
     <?php if ($error_msg): ?>
@@ -259,11 +289,16 @@ function hitungTotal() {
     </form>
 
     <?php if ($member): ?>
-        <p class="member-info">Member: <?= htmlspecialchars($member['nama_member']) ?> | Poin: <?= number_format($member['poin']) ?></p>
+        <p class="member-info">Member: <?= htmlspecialchars($member['nama_member']) ?> | Poin: <?= $member['poin'] ?> (1 poin = Rp 1.000)</p>
+
     <?php endif; ?>
 
     <?php if (!empty($_SESSION['keranjang'])): ?>
     <form method="post" action="../user/checkout.php" onsubmit="return confirm('Yakin melakukan checkout?')">
+        <input type="hidden" name="total_semua" id="input-total" />
+<input type="hidden" name="total_diskon" id="input-diskon" />
+<input type="hidden" name="total_bayar" id="input-bayar" />
+
         <table>
             <thead>
                 <tr>
@@ -296,19 +331,12 @@ function hitungTotal() {
 
         <div id="total-section" style="display: none;">
             <div class="total-box">Total: <span id="total-harga">Rp 0</span></div>
-            <div class="total-box">Diskon Poin: <span id="diskon-poin">Rp 0</span></div>
+            <div class="total-box">Diskon Member: <span id="diskon-poin">Rp 0</span></div>
             <div class="total-box"><strong>Total Bayar: <span id="total-bayar">Rp 0</span></strong></div>
         </div>
 
         <label for="uang_dibayar">Uang Dibayar (Rp):</label>
         <input type="number" name="uang_dibayar" min="0" required>
-
-        <div class="payment-methods">
-            <label><input type="radio" name="metode_pembayaran" value="tunai" checked> Tunai</label>
-            <label><input type="radio" name="metode_pembayaran" value="gopay"> GoPay</label>
-            <label><input type="radio" name="metode_pembayaran" value="ovo"> OVO</label>
-            <label><input type="radio" name="metode_pembayaran" value="dana"> Dana</label>
-        </div>
 
         <button type="submit" class="checkout-btn">Checkout</button>
     </form>

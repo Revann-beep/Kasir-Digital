@@ -27,7 +27,7 @@ $filter = $_GET['filter'] ?? 'harian';
 
 if ($filter === 'harian') {
     $query = mysqli_query($conn, "
-        SELECT DATE(t.tgl_pembelian) AS label, SUM(d.jumlah) AS total_item
+        SELECT DATE(t.tgl_pembelian) AS label, SUM(d.qty) AS total_item
         FROM transaksi t
         JOIN detail_transaksi d ON t.id_transaksi = d.fid_transaksi
         WHERE t.tgl_pembelian >= CURDATE() - INTERVAL 6 DAY
@@ -36,16 +36,16 @@ if ($filter === 'harian') {
     ");
 } elseif ($filter === 'bulanan') {
     $query = mysqli_query($conn, "
-        SELECT DATE_FORMAT(t.tgl_pembelian, '%b %Y') AS label, SUM(d.jumlah) AS total_item
+        SELECT DATE_FORMAT(t.tgl_pembelian, '%b %Y') AS label, SUM(d.qty) AS total_item
         FROM transaksi t
         JOIN detail_transaksi d ON t.id_transaksi = d.fid_transaksi
-        WHERE t.tgl_pembelian >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+           WHERE t.tgl_pembelian >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         GROUP BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
         ORDER BY YEAR(t.tgl_pembelian), MONTH(t.tgl_pembelian)
     ");
 } else {
     $query = mysqli_query($conn, "
-        SELECT YEAR(t.tgl_pembelian) AS label, SUM(d.jumlah) AS total_item
+        SELECT YEAR(t.tgl_pembelian) AS label, SUM(d.qty) AS total_item
         FROM transaksi t
         JOIN detail_transaksi d ON t.id_transaksi = d.fid_transaksi
         GROUP BY YEAR(t.tgl_pembelian)
@@ -321,7 +321,7 @@ while ($row = mysqli_fetch_assoc($query)) {
             data: {
                 labels: <?php echo json_encode($labels); ?>,
                 datasets: [{
-                    label: 'Jumlah Item Terjual (<?php echo ucfirst($filter); ?>)',
+                    label: 'qty Item Terjual (<?php echo ucfirst($filter); ?>)',
                     data: <?php echo json_encode($data); ?>,
                     backgroundColor: 'rgba(184, 134, 11, 0.7)'
                 }]

@@ -34,15 +34,24 @@ $metode = $_POST['metode_pembayaran'] ?? 'Tunai';
 $uang_dibayar = isset($_POST['uang_dibayar']) ? (int) $_POST['uang_dibayar'] : 0;
 
 // Diskon 10% jika member aktif
+// Diskon berdasarkan poin: 1 poin = Rp1.000
 $diskon = 0;
 $is_member_aktif = false;
+$poin_dipakai = 0;
+
 if ($fid_member !== 'NULL') {
     $q = mysqli_query($conn, "SELECT poin FROM member WHERE id_member = $fid_member AND status='aktif'");
     if ($q && mysqli_num_rows($q)) {
         $is_member_aktif = true;
-        $diskon = floor($total_awal * 0.1); // diskon 10%
+        $data_member = mysqli_fetch_assoc($q);
+        $poin = (int) $data_member['poin'];
+        $maksimal_diskon = $poin * 1000;
+
+        $diskon = min($total_awal, $maksimal_diskon);
+        $poin_dipakai = floor($diskon / 1000);
     }
 }
+
 
 $total_bayar = $total_awal - $diskon;
 
@@ -73,22 +82,32 @@ foreach ($keranjang_checkout as $id_produk => $item) {
     $qty = (int) $item['qty'];
     $harga = (int) $item['harga'];
     $subtotal = $harga * $qty;
+    $jumlah = $qty;
 
     mysqli_query($conn, "
-        INSERT INTO detail_transaksi (fid_transaksi, fid_produk, qty, harga, subtotal)
-        VALUES ($id_transaksi, $id_produk, $qty, $harga, $subtotal)
+        INSERT INTO detail_transaksi (fid_transaksi, fid_produk, qty, harga, subtotal, jumlah)
+        VALUES ($id_transaksi, $id_produk, $qty, $harga, $subtotal, $jumlah)
     ");
 
     mysqli_query($conn, "UPDATE produk SET stok = stok - $qty WHERE id_produk = $id_produk");
 
-    // Hapus produk dari keranjang setelah sukses
+    // Hapus produk dari keranjang
     unset($_SESSION['keranjang'][$id_produk]);
 }
 
 // Tambah poin untuk member aktif
+// Tambah poin & kurangi poin yang dipakai
 if ($fid_member !== 'NULL' && $is_member_aktif) {
-    $poin_baru = floor($total_bayar / 1000);
-    mysqli_query($conn, "UPDATE member SET poin = poin + $poin_baru WHERE id_member = $fid_member");
+    // Kurangi poin yang dipakai
+    if ($poin_dipakai > 0) {
+        mysqli_query($conn, "UPDATE member SET poin = poin - $poin_dipakai WHERE id_member = $fid_member");
+    }
+
+    // Tambah poin reward
+    $poin_didapat = floor($total_bayar / 500000) * 10;
+    if ($poin_didapat > 0) {
+        mysqli_query($conn, "UPDATE member SET poin = poin + $poin_didapat WHERE id_member = $fid_member");
+    }
 }
 
 // Kosongkan keranjang jika sudah tidak ada produk
