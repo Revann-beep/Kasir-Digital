@@ -10,6 +10,10 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
+if (isset($_SESSION["pesan"])){
+    echo "<script>alert('".$_SESSION["pesan"]."');</script>";
+    unset($_SESSION["pesan"]);
+}
 // Tangani pencarian
 $searchQuery = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
@@ -241,9 +245,10 @@ $admins = $conn->query($sql);
                 </td>
                 <td class="action-icons">
                     <span class="icon" title="Edit" onclick="window.location.href='../service/edit-acc.php?id=<?= $row['id'] ?>'">✏️</span>
-                    <form action="../service/delete-acc.php" method="POST" onsubmit="return confirm('Hapus admin ini?')" style="display:inline;">
-                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                        <button type="submit" name="delete" title="Delete">🗑️</button>
+                    
+                    <form method="POST" action="../service/delete-acc.php" onsubmit="return confirm('Yakin ingin hapus admin ini?')">
+                        <input type="hidden" name="id" value="<?= $row['id']; ?>">
+                        <button type="submit" class="btn btn-danger">🗑️</button>
                     </form>
                 </td>
             </tr>

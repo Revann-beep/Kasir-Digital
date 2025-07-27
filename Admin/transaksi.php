@@ -11,15 +11,14 @@ $offset = ($page - 1) * $limit;
 if (isset($_POST['simpan_transaksi'])) {
     $tgl_pembelian = date('Y-m-d');
     $fid_admin = $_POST['fid_admin'];
-    $fid_produk = $_POST['fid_produk'];
-    $detail = $_POST['detail'];
+    
     $fid_member = $_POST['fid_member'];
     $total_harga = $_POST['total_harga'];
 
     // Simpan ke tabel transaksi
     mysqli_query($conn, "INSERT INTO transaksi 
-        (tgl_pembelian, fid_admin, fid_produk, detail, fid_member, total_harga)
-        VALUES ('$tgl_pembelian', $fid_admin, $fid_produk, '$detail', $fid_member, $total_harga)");
+        (tgl_pembelian, fid_admin, fid_member, total_harga)
+        VALUES ('$tgl_pembelian', $fid_admin, $fid_member, $total_harga)");
 
     // Jika ada member aktif
     if (!empty($fid_member)) {
@@ -186,8 +185,7 @@ $result = mysqli_query($conn, $query);
                 <th>No.</th>
                 <th>Tanggal</th>
                 <th>Admin</th>
-                <th>Produk</th>
-                <th>Detail</th>
+                
                 <th>Member</th>
                 <th>Total Harga</th>
             </tr>
@@ -200,8 +198,7 @@ $result = mysqli_query($conn, $query);
                     <td>{$no}</td>
                     <td>{$row['tgl_pembelian']}</td>
                     <td>{$row['fid_admin']}</td>
-                    <td>" . ($row['nama_produk'] ?? '-') . "</td>
-                    <td>{$row['detail']}</td>
+                    
                     <td>" . ($row['nama_member'] ?? '-') . "</td>
                     <td>Rp" . number_format($row['total_harga'], 0, ',', '.') . "</td>
                 </tr>";

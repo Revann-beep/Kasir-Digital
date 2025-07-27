@@ -33,12 +33,21 @@ foreach ($produk_dipilih as $id_produk) {
 $metode = $_POST['metode_pembayaran'] ?? 'Tunai';
 $uang_dibayar = isset($_POST['uang_dibayar']) ? (int) $_POST['uang_dibayar'] : 0;
 
-// Diskon 10% jika member aktif
-// Diskon berdasarkan poin: 1 poin = Rp1.000
+// Siapkan diskon & poin
 $diskon = 0;
 $is_member_aktif = false;
 $poin_dipakai = 0;
 
+// ✅ Aktifkan member dulu kalau ada dan masih tidak aktif
+if ($fid_member !== 'NULL') {
+    mysqli_query($conn, "
+        UPDATE member 
+        SET status = 'aktif', tanggal_aktif = NOW() 
+        WHERE id_member = $fid_member AND status = 'tidak aktif'
+    ");
+}
+
+// ✅ Setelah diaktifkan, cek apakah member aktif dan punya poin
 if ($fid_member !== 'NULL') {
     $q = mysqli_query($conn, "SELECT poin FROM member WHERE id_member = $fid_member AND status='aktif'");
     if ($q && mysqli_num_rows($q)) {
@@ -51,7 +60,6 @@ if ($fid_member !== 'NULL') {
         $poin_dipakai = floor($diskon / 1000);
     }
 }
-
 
 $total_bayar = $total_awal - $diskon;
 
@@ -76,7 +84,7 @@ $sql_transaksi = "
 mysqli_query($conn, $sql_transaksi);
 $id_transaksi = mysqli_insert_id($conn);
 
-// Detail transaksi dan update stok
+// Simpan detail transaksi dan update stok
 foreach ($keranjang_checkout as $id_produk => $item) {
     $id_produk = (int) $item['id_produk'];
     $qty = (int) $item['qty'];
@@ -91,19 +99,16 @@ foreach ($keranjang_checkout as $id_produk => $item) {
 
     mysqli_query($conn, "UPDATE produk SET stok = stok - $qty WHERE id_produk = $id_produk");
 
-    // Hapus produk dari keranjang
-    unset($_SESSION['keranjang'][$id_produk]);
+    unset($_SESSION['keranjang'][$id_produk]); // Hapus dari keranjang
 }
 
-// Tambah poin untuk member aktif
-// Tambah poin & kurangi poin yang dipakai
+// ✅ Setelah transaksi selesai, kurangi dan tambahkan poin
 if ($fid_member !== 'NULL' && $is_member_aktif) {
-    // Kurangi poin yang dipakai
     if ($poin_dipakai > 0) {
         mysqli_query($conn, "UPDATE member SET poin = poin - $poin_dipakai WHERE id_member = $fid_member");
     }
 
-    // Tambah poin reward
+    // Tambah poin reward: 10 poin tiap Rp500.000
     $poin_didapat = floor($total_bayar / 500000) * 10;
     if ($poin_didapat > 0) {
         mysqli_query($conn, "UPDATE member SET poin = poin + $poin_didapat WHERE id_member = $fid_member");

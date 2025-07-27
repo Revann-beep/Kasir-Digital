@@ -5,7 +5,7 @@ include '../service/conection.php';
 $kategoriResult = mysqli_query($conn, "SELECT * FROM kategori");
 
 // Konfigurasi pagination
-$limit = 10;
+$limit = 5;
 $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 $start = ($page - 1) * $limit;
 
@@ -65,7 +65,7 @@ $result = mysqli_query($conn, $query);
             background: #b8860b;
             color: white;
             padding: 20px;
-            height: 100vh;
+            height: 200vh;
         }
         .sidebar h2 {
             text-align: center;
@@ -295,6 +295,8 @@ $result = mysqli_query($conn, $query);
 </div>
 <div class="content">
     <a href="../Scanner/Scan.php" class="add-btn green" style="margin-bottom: 20px;">🛒 Transaksi Sekarang</a>
+     
+
 
     <div class="top-bar">
     <form method="GET" class="search-form">

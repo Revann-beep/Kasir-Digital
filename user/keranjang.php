@@ -30,16 +30,24 @@ $error_msg = null;
 // Cari member berdasarkan no_telp
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['no_telp']) && !isset($_POST['reset_member'])) {
     $no_telp = mysqli_real_escape_string($conn, $_POST['no_telp']);
-    $q = mysqli_query($conn, "SELECT * FROM member WHERE no_telp='$no_telp' AND status='aktif'");
+    $q = mysqli_query($conn, "SELECT * FROM member WHERE no_telp='$no_telp'");
     if (mysqli_num_rows($q) > 0) {
         $member = mysqli_fetch_assoc($q);
+        
+        // Jika member tidak aktif, aktifkan otomatis
+        if ($member['status'] !== 'aktif') {
+            mysqli_query($conn, "UPDATE member SET status='aktif', tanggal_aktif=NOW() WHERE id_member=" . $member['id_member']);
+            $member['status'] = 'aktif'; // Update status di variabel juga
+        }
+
         $_SESSION['fid_member'] = $member['id_member'];
         header("Location: keranjang.php");
         exit;
     } else {
-        $error_msg = "Member tidak ditemukan atau tidak aktif.";
+        $error_msg = "Member tidak ditemukan.";
     }
 }
+
 
 if ($fid_member) {
     $q = mysqli_query($conn, "SELECT * FROM member WHERE id_member=$fid_member");

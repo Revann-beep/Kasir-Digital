@@ -223,7 +223,8 @@ while ($row = mysqli_fetch_assoc($query)) {
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 6px 15px rgb(0 0 0 / 0.1);
-            height: 420px;
+            height: 320px;
+            max-width: 600px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -295,7 +296,7 @@ while ($row = mysqli_fetch_assoc($query)) {
         <div class="grid-container" role="navigation" aria-label="Menu Navigasi">
             <a href="produk.php"><button type="button">📦 Data Product</button></a>
             <a href="laporan.php"><button type="button">📊 Laporan</button></a>
-            <a href="member.php"><button type="button">👥 Halaman Member</button></a>
+            <a href="member.php"><button type="button">👥  Member</button></a>
             <a href="admin.php"><button type="button">👨‍💼 Admin</button></a>
             <a href="transaksi.php"><button type="button">💳 Transaksi</button></a>
         </div>
@@ -323,7 +324,7 @@ while ($row = mysqli_fetch_assoc($query)) {
                 datasets: [{
                     label: 'qty Item Terjual (<?php echo ucfirst($filter); ?>)',
                     data: <?php echo json_encode($data); ?>,
-                    backgroundColor: 'rgba(184, 134, 11, 0.7)'
+                    backgroundColor: 'rgba(6, 64, 66, 0.7)'
                 }]
             },
             options: {

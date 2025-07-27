@@ -106,14 +106,19 @@
 
 <h2>Scan Barcode Produk</h2>
 
+<!-- Kamera Scanner -->
 <div id="reader"></div>
 
+<!-- Form Barcode -->
 <form action="proses_scan.php" method="POST" id="barcodeForm">
   <label for="barcode">Kode Barcode</label>
-  <input type="text" id="barcode" name="barcode" readonly required />
+  <input type="text" id="barcode" name="barcode" required autofocus />
+  <div class="message">🔍 Scan dengan kamera atau alat scanner barcode</div>
   <button type="submit">Cari Produk</button>
-  <div class="message" id="feedbackMessage"></div>
-</form>
+  <div class="message" id="feed 
+
+<!-- Suara beep -->
+<audio id="beepSound" src="sounds/beep.mp3" preload="auto"></audio>
 
 <script>
   const html5QrCode = new Html5Qrcode("reader");
@@ -129,28 +134,50 @@
     ]
   };
 
+  // Fungsi mainkan suara beep
+  function playBeep() {
+    const beep = document.getElementById("beepSound");
+    if (beep) {
+      beep.currentTime = 0;
+      beep.play().catch(err => console.warn("Beep tidak dapat diputar:", err));
+    }
+  }
+
+  // Start kamera scanner
   html5QrCode.start(
     { facingMode: "environment" },
     config,
     (decodedText, decodedResult) => {
       console.log("Kode berhasil dipindai:", decodedText);
       document.getElementById("barcode").value = decodedText;
-      document.getElementById("feedbackMessage").textContent = "✅ Kode berhasil dipindai.";
+      document.getElementById("feedbackMessage").textContent = "✅ Kode berhasil dipindai (kamera).";
+      playBeep();
 
-      // Stop scanner setelah berhasil scan
+      // Stop scanner kamera setelah berhasil
       html5QrCode.stop().then(() => {
-        console.log("Scanner dihentikan.");
+        console.log("Scanner kamera dihentikan.");
       }).catch(err => {
-        console.error("Gagal menghentikan scanner:", err);
+        console.error("Gagal menghentikan kamera scanner:", err);
       });
     },
     (errorMessage) => {
-      // Scan error bisa diabaikan, ini opsional
+      // Error kamera bisa diabaikan
     }
   );
 
+  // Cek input manual / dari alat scanner
+  document.getElementById("barcode").addEventListener("change", function () {
+    const barcode = this.value.trim();
+    if (barcode !== "") {
+      document.getElementById("feedbackMessage").textContent = "✅ Barcode diterima dari alat scanner.";
+      playBeep();
+      document.getElementById("barcodeForm").submit();
+    }
+  });
+
+  // Validasi saat form dikirim
   document.getElementById("barcodeForm").addEventListener("submit", function(event) {
-    const barcode = document.getElementById("barcode").value;
+    const barcode = document.getElementById("barcode").value.trim();
     if (!barcode) {
       event.preventDefault();
       alert("❗ Tidak ada barcode yang dipindai.");

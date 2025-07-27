@@ -1,31 +1,52 @@
 <?php
 include '../service/conection.php';
 
-// Tangkap filter tanggal dari form
-$start = $_GET['start_date'] ?? date('Y-m-01', strtotime('-2 month')); // default: 2 bulan lalu
+$start = $_GET['start_date'] ?? date('Y-m-01', strtotime('-2 month'));
 $end   = $_GET['end_date'] ?? date('Y-m-d');
 
-// Query data transaksi per bulan
+// Query per bulan
 $query = mysqli_query($conn, "
     SELECT 
-        DATE_FORMAT(tgl_pembelian, '%Y-%m') AS bulan,
-        COUNT(*) AS total_transaksi,
-        SUM(total_harga) AS total_penjualan
-    FROM transaksi
-    WHERE DATE(tgl_pembelian) BETWEEN '$start' AND '$end'
-    GROUP BY bulan
-    ORDER BY bulan ASC
+        DATE_FORMAT(t.tgl_pembelian, '%Y-%m') AS bulan,
+        SUM(p.modal * dt.qty) AS total_modal,
+        SUM(p.harga_jual * dt.qty) AS total_penjualan,
+        SUM((p.harga_jual - p.modal) * dt.qty) AS total_untung,
+        COUNT(DISTINCT t.id_transaksi) AS total_transaksi,
+        SUM(dt.qty) AS total_qty
+    FROM transaksi t
+    JOIN detail_transaksi dt ON t.id_transaksi = dt.fid_transaksi
+    JOIN produk p ON dt.fid_produk = p.id_produk
+    WHERE t.tgl_pembelian BETWEEN '$start' AND '$end'
+    GROUP BY DATE_FORMAT(t.tgl_pembelian, '%Y-%m')
+    ORDER BY bulan DESC
 ");
+
+// Persiapkan data chart
+$labels = [];
+$dataKeuntungan = [];
+$dataQty = []; // TAMBAH INI
+
+$data_rows = [];
+while ($row = mysqli_fetch_assoc($query)) {
+    $data_rows[] = $row;
+
+    $bulan = date('F Y', strtotime($row['bulan'] . '-01'));
+    $labels[] = $bulan;
+    $dataKeuntungan[] = $row['total_untung'];
+    $dataQty[] = $row['total_qty']; // TAMBAH INI
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
     <title>Laporan Bulanan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
+
+          body {
             display: flex;
             margin: 0;
             font-family: Arial, sans-serif;
@@ -34,7 +55,7 @@ $query = mysqli_query($conn, "
             width: 200px;
             background-color: #b8860b;
             padding: 20px;
-            height: 100vh;
+            height: 200vh;
             color: white;
         }
         .sidebar h2, .sidebar ul {
@@ -56,18 +77,6 @@ $query = mysqli_query($conn, "
             flex-grow: 1;
             padding: 20px;
             background-color: #f9f9f9;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .header input[type="text"] {
-            padding: 5px 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 200px;
         }
         .report-container {
             background: white;
@@ -141,39 +150,50 @@ $query = mysqli_query($conn, "
             .sidebar {
                 display: none !important;
             }
-            .header, .filter-form, .download-btn {
+            .filter-form, .download-btn {
                 display: none !important;
             }
             .main-content {
                 padding: 0;
                 background-color: white;
             }
-            table {
-                page-break-inside: auto;
-            }
-            tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
-            }
         }
+        /* ... (tetap gunakan CSS yang kamu buat sebelumnya) ... */
+        .chart-container {
+    margin-top: 40px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 500px; /* batas lebar maksimum */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chart-wrapper {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Toko Elektronik</h2>
-        <ul>
-            <li><a href="dashboard.php">⚙️ Dashboard</a></li>
-            <li><a href="kategori.php">📂 Kategori</a></li>
-            <li><a href="produk.php">📦 Produk</a></li>
-            <li><a href="../service/logout.php">↩️ Log out</a></li>
-        </ul>
-    </div>
+
+<div class="sidebar">
+    <h2>TimelessWatch.co</h2>
+    <ul>
+        <li><a href="dashboard.php">⚙️ Dashboard</a></li>
+        <li><a href="kategori.php">📂 Kategori</a></li>
+        <li><a href="produk.php" style="background: rgba(255, 255, 255, 0.2); border-radius: 5px;">📦 Produk</a></li>
+        <li><a href="../service/logout.php">↩️ Log out</a></li>
+    </ul>
+</div>
+    <!-- ... (sidebar dan filter form tetap) ... -->
     <div class="main-content">
-        ch
         <div class="report-container">
             <h3>Laporan Transaksi Bulanan</h3>
 
-            <!-- Filter kalender -->
             <form method="get" class="filter-form">
                 <label>Dari:</label>
                 <input type="date" name="start_date" value="<?= $start ?>" required>
@@ -182,9 +202,7 @@ $query = mysqli_query($conn, "
                 <button type="submit">Terapkan</button>
             </form>
 
-            <button class="download-btn" onclick="window.print()">
-                <span class="icon">🖨️</span> Unduh Laporan
-            </button>
+            <button class="download-btn" onclick="window.print()">🖨️ Unduh Laporan</button>
 
             <table>
                 <thead>
@@ -192,37 +210,83 @@ $query = mysqli_query($conn, "
                         <th>#</th>
                         <th>Bulan</th>
                         <th>Total Penjualan</th>
+                        <th>Total Modal</th>
+                        <th>Total Keuntungan</th>
                         <th>Total Transaksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php 
                     $no = 1;
-                    while($row = mysqli_fetch_assoc($query)) {
+                    foreach ($data_rows as $row) {
                         $bulanDate = strtotime($row['bulan'] . '-01');
-                        $bulanAwal = date('Y-m-01', $bulanDate);
-                        $bulanAkhir = date('Y-m-t', $bulanDate);
-
-                        $rentangAwal = max($start, $bulanAwal);
-                        $rentangAkhir = min($end, $bulanAkhir);
-
-                        $rentangAwalFormatted = date('d-m-Y', strtotime($rentangAwal));
-                        $rentangAkhirFormatted = date('d-m-Y', strtotime($rentangAkhir));
-
-                        $bulanFormatted = date('F Y', $bulanDate) . " ({$rentangAwalFormatted} s.d. {$rentangAkhirFormatted})";
+                        $bulanFormatted = date('F Y', $bulanDate);
 
                         echo "<tr>
-                                <td>{$no}</td>
-                                <td>{$bulanFormatted}</td>
-                                <td>Rp" . number_format($row['total_penjualan'], 0, ',', '.') . "</td>
-                                <td>{$row['total_transaksi']}</td>
-                              </tr>";
+                            <td>{$no}</td>
+                            <td>{$bulanFormatted}</td>
+                            <td>Rp" . number_format($row['total_penjualan'], 0, ',', '.') . "</td>
+                            <td>Rp" . number_format($row['total_modal'], 0, ',', '.') . "</td>
+                            <td>Rp" . number_format($row['total_untung'], 0, ',', '.') . "</td>
+                            <td>{$row['total_transaksi']}</td>
+                        </tr>";
                         $no++;
-                    } 
+                    }
                     ?>
                 </tbody>
             </table>
+
+            <!-- Grafik Bagan -->
+            <!-- Grafik Bagan -->
+<div class="chart-wrapper">
+    <div class="chart-container">
+        <h4>Grafik Batang: Total Keuntungan per Bulan</h4>
+        <canvas id="chartKeuntungan" width="600" height="300"></canvas>
+    </div>
+    
+</div>
+
         </div>
     </div>
+
+    <script>
+        // Grafik Batang: Keuntungan
+const ctx = document.getElementById('chartKeuntungan').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: <?= json_encode(array_reverse($labels)) ?>,
+        datasets: [{
+            label: 'Total Keuntungan (Rp)',
+            data: <?= json_encode(array_reverse($dataKeuntungan)) ?>,
+            backgroundColor: '#f39c12'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: {
+                display: true,
+                text: 'Keuntungan Bulanan (Rp)'
+            }
+        },
+        scales: {
+            y: {
+                ticks: {
+                    callback: function(value) {
+                        return 'Rp' + value.toLocaleString('id-ID');
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Diagram Lingkaran: Jumlah Produk Terjual
+
+
+
+    </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 include '../service/conection.php';
 
 // Masa aktif member 1 menit (60 detik)
-$durasi_aktif_detik = 60;
+$durasi_aktif_detik = 360;
 $tgl_sekarang = date('Y-m-d H:i:s');
 
 // Cek member aktif yang sudah kadaluarsa
@@ -249,7 +249,7 @@ if (count($expired_members) > 0) {
     <?php
     $nama = "";
     $telp = "";
-    $status = "aktif";
+    $status = "tidak aktif";
     $edit_id = 0;
 
     if (isset($_GET['edit'])) {
@@ -275,11 +275,13 @@ if (count($expired_members) > 0) {
             <label>No Telp</label>
             <input type="text" name="no_telp" required value="<?= htmlspecialchars($telp); ?>">
 
-            <label>Status</label>
-            <select name="status">
-                <option value="aktif" <?= $status == 'aktif' ? "selected" : ""; ?>>Aktif</option>
-                <option value="tidak aktif" <?= $status == 'tidak aktif' ? "selected" : ""; ?>>Tidak Aktif</option>
-            </select>
+            <?php if ($edit_id > 0): ?>
+    <label>Status</label>
+    <select name="status">
+        <option value="aktif" <?= $status == 'aktif' ? "selected" : ""; ?>>Aktif</option>
+        <option value="tidak aktif" <?= $status == 'tidak aktif' ? "selected" : ""; ?>>Tidak Aktif</option>
+    </select>
+<?php endif; ?>
 
             <button type="submit" name="simpan" class="btn btn-submit">Simpan</button>
         </form>
@@ -314,7 +316,8 @@ if (count($expired_members) > 0) {
             mysqli_query($conn, $sql_update);
         } else {
             $sql_insert = "INSERT INTO member (nama_member, no_telp, poin, status, tanggal_aktif) 
-                VALUES ('$nama_member', '$no_telp', 0, '$status', NOW())";
+    VALUES ('$nama_member', '$no_telp', 0, 'tidak aktif', NULL)";
+
             mysqli_query($conn, $sql_insert);
         }
 
