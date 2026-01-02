@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $_SESSION['gambar'] = $row['gambar'];
             $_SESSION['welcome_message'] = "Selamat datang admin " . $row['username'];
 
-            $conn->query("UPDATE admin SET status = 'Nonaktif'");
+              $conn->query("UPDATE admin SET status = 'Nonaktif'");
             $adminId = $row['id'];
             $conn->query("UPDATE admin SET status = 'Aktif' WHERE id = $adminId");
 

@@ -174,7 +174,7 @@
       document.getElementById("barcodeForm").submit();
     }
   });
-
+  
   // Validasi saat form dikirim
   document.getElementById("barcodeForm").addEventListener("submit", function(event) {
     const barcode = document.getElementById("barcode").value.trim();

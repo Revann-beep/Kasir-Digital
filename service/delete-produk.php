@@ -39,7 +39,8 @@ if ($produk['stok'] > 0) {
 }
 
 // Hapus dari keranjang dulu
-mysqli_query($conn, "DELETE FROM keranjang WHERE fid_produk = '$id'");
+mysqli_query($conn, "DELETE FROM keranjang WHERE id_produk = '$id'");
+
 
 // Hapus dari tabel produk
 mysqli_query($conn, "DELETE FROM produk WHERE id_produk = '$id'");

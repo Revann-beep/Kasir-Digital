@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['id'])) {
         $admin = $result->fetch_assoc();
         $status = strtolower(trim($admin['status'])); // 👈 Perbaikan di sini
 
-        if ($status === 'tidak aktif') {
+        if ($status === 'nonaktif') {
             $delete = $conn->prepare("DELETE FROM admin WHERE id = ?");
             $delete->bind_param("i", $id);
             if ($delete->execute()) {

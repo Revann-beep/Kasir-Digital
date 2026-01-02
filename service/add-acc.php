@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Jika tidak ada error, simpan ke database
     if (empty($errors)) {
         $sql = "INSERT INTO admin (email, username, password, gambar, status) 
-        VALUES ('$email_escaped', '$username_escaped', '$password_hash', " . ($gambar ? "'$gambar'" : "NULL") . ", 'tidak aktif')";
+        VALUES ('$email_escaped', '$username_escaped', '$password_hash', " . ($gambar ? "'$gambar'" : "nonaktif") . ", 'nonaktif')";
 
         if (mysqli_query($conn, $sql)) {
             header("Location: ../admin/admin.php");
